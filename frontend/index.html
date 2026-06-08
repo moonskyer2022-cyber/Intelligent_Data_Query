@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIQuery · 智能问数</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">AI</div>
+        <div>
+          <h1>AIQuery</h1>
+          <p>本地智能问数助手</p>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">检测服务中…</span>
+      </div>
+
+      <section class="sidebar-section">
+        <h2>示例问题</h2>
+        <div class="examples" id="examples"></div>
+      </section>
+
+      <section class="sidebar-section">
+        <h2>数据表</h2>
+        <ul class="table-list" id="tableList"></ul>
+      </section>
+    </aside>
+
+    <main class="main">
+      <header class="main-header">
+        <h2>数据问答</h2>
+        <p>用自然语言提问，自动查询 ai_query 数据库并生成回答</p>
+      </header>
+
+      <div class="chat" id="chat">
+        <div class="welcome" id="welcome">
+          <div class="welcome-icon">📊</div>
+          <h3>开始提问吧</h3>
+          <p>例如：本月订单 GMV 是多少、各省份订单金额排名、各类目商品销量</p>
+        </div>
+      </div>
+
+      <form class="composer" id="composer">
+        <textarea
+          id="questionInput"
+          rows="1"
+          placeholder="输入你的问题，Enter 发送，Shift+Enter 换行…"
+          maxlength="2000"
+        ></textarea>
+        <button type="submit" id="sendBtn" aria-label="发送">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+        </button>
+      </form>
+    </main>
+  </div>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>
