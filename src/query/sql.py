@@ -18,6 +18,13 @@ def _field_ref(field: str, table_map: list[tuple[str, str, str]]) -> str:
     raise ValueError(f"未知字段: {field}")
 
 
+def _aggregate_order_ref(field: str, plan: QueryPlan, table_map: list[tuple[str, str, str]]) -> str:
+    aliases = {agg.alias for agg in plan.aggregates if agg.alias}
+    if field in aliases:
+        return f"`{field}`"
+    return _field_ref(field, table_map)
+
+
 def _build_filter(table_map: list[tuple[str, str, str]], filt: Optional[dict], params: list[Any]) -> str:
     if not filt or not filt.get("conditions"):
         return ""
@@ -132,7 +139,7 @@ def build_sql(plan: QueryPlan) -> tuple[str, list[Any]]:
         sql += " GROUP BY " + ", ".join(_field_ref(field, table_map) for field in plan.group_by)
     if plan.order_by:
         sql += " ORDER BY " + ", ".join(
-            f"{_field_ref(order.field, table_map)} {order.direction.upper()}" for order in plan.order_by
+            f"{_aggregate_order_ref(order.field, plan, table_map)} {order.direction.upper()}" for order in plan.order_by
         )
     sql += " LIMIT %s"
     params.append(plan.page_size)

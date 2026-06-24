@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Any
 
 from jinja2 import Template
@@ -52,5 +53,22 @@ def extract_text(content: Any) -> str:
 
 
 def parse_json_response(text: str) -> dict[str, Any]:
-    cleaned = text.replace("```json", "").replace("```", "").strip()
-    return json.loads(cleaned)
+    cleaned = text.strip()
+    fence_match = re.search(r"```(?:json)?\s*(.*?)\s*```", cleaned, flags=re.DOTALL | re.IGNORECASE)
+    if fence_match:
+        cleaned = fence_match.group(1).strip()
+
+    if not cleaned.startswith("{"):
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start >= 0 and end > start:
+            cleaned = cleaned[start : end + 1]
+
+    try:
+        payload = json.loads(cleaned)
+    except json.JSONDecodeError as exc:
+        raise ValueError("LLM 返回的查询计划不是有效 JSON，请重试或换一种更明确的问法") from exc
+
+    if not isinstance(payload, dict):
+        raise ValueError("LLM 返回的查询计划必须是 JSON 对象")
+    return payload

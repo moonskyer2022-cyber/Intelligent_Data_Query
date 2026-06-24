@@ -53,13 +53,29 @@ Copy-Item .env.example .env
 - `DB_PASSWORD`
 - `DB_NAME`
 
-4. 命令行运行问数。
+4. 初始化 MySQL 数据库。
+
+```powershell
+mysql -h 127.0.0.1 -P 3306 -u root -p < scripts/init_mysql.sql
+```
+
+如果使用了不同的数据库地址、端口、用户名或库名，请与 `.env` 中的配置保持一致。
+
+5. 检查服务、数据库和 LLM 配置状态。
+
+```powershell
+python run.py --server
+```
+
+浏览器打开 [http://localhost:8000/health](http://localhost:8000/health)。`status` 为 `ok` 表示数据库和 LLM key 都已就绪；如果返回 `warning`，按响应里的 `database.message` 或 `llm.message` 处理。
+
+6. 命令行运行问数。
 
 ```powershell
 python run.py -q "本月订单GMV是多少？"
 ```
 
-5. 启动 Web 服务。
+7. 启动 Web 服务。
 
 ```powershell
 python run.py --server
@@ -76,6 +92,16 @@ python run.py --server
 - `GET /health`：健康检查
 - `GET /static/charts/{filename}`：访问生成的图表图片
 
+## 测试
+
+项目内置了不依赖真实 MySQL 和 LLM 的核心单元测试：
+
+```powershell
+python -m unittest discover -s tests
+```
+
+当前覆盖内容包括 LLM JSON 解析、会话历史格式化、聚合排序 SQL 生成和健康检查接口。
+
 ## 项目结构
 
 ```text
@@ -83,12 +109,14 @@ python run.py --server
 ├─config/                # LLM 提示词配置
 ├─frontend/              # 前端页面
 ├─output/charts/         # 生成的图表
+├─scripts/               # 数据库初始化脚本
 ├─src/
 │  ├─graphs/             # LangGraph 工作流
 │  ├─llm/                # LLM 调用封装
 │  ├─query/              # 查询计划与 SQL 生成
 │  ├─storage/            # 数据库与元数据访问
 │  └─tools/              # 图表工具
+├─tests/                 # 单元测试
 └─run.py                 # CLI / Web 启动入口
 ```
 

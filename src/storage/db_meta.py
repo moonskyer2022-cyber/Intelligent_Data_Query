@@ -177,3 +177,46 @@ def load_examples(limit: int = 8) -> list[str]:
 
 def list_tables_for_ui() -> list[tuple[str, str]]:
     return [(logical, sql) for logical, sql in TABLES.items() if sql != "query_example"]
+
+
+def check_database_health() -> dict[str, object]:
+    expected_tables = {sql for sql in TABLES.values() if sql != "chat_record"}
+    try:
+        with pymysql.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME,
+            charset="utf8mb4",
+            cursorclass=DictCursor,
+            connect_timeout=3,
+            read_timeout=3,
+            write_timeout=3,
+        ) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1 AS ok")
+                cur.execute(
+                    """
+                    SELECT TABLE_NAME
+                    FROM information_schema.TABLES
+                    WHERE TABLE_SCHEMA = %s
+                    """,
+                    (DB_NAME,),
+                )
+                existing_tables = {row["TABLE_NAME"] for row in cur.fetchall()}
+    except Exception as exc:
+        return {
+            "status": "error",
+            "message": f"数据库连接失败，请检查 DB_HOST、DB_PORT、DB_USER、DB_PASSWORD、DB_NAME。{exc}",
+        }
+
+    missing = sorted(expected_tables - existing_tables)
+    if missing:
+        return {
+            "status": "warning",
+            "message": "数据库可连接，但缺少必要表；请执行 scripts/init_mysql.sql 初始化。",
+            "missing_tables": missing,
+        }
+
+    return {"status": "ok", "message": "数据库连接和必要表检查通过"}

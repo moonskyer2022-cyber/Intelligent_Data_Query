@@ -95,7 +95,9 @@ class QueryPlan(BaseModel):
             tables = [sql_table(self.primary_table if self.join_tables else self.table_name)]
             for join in self.join_tables:
                 tables.append(sql_table(join.table_name))
-            fields = self.group_by + [agg.field for agg in self.aggregates] + [order.field for order in self.order_by]
+            aggregate_aliases = {agg.alias for agg in self.aggregates if agg.alias}
+            fields = self.group_by + [agg.field for agg in self.aggregates]
+            fields += [order.field for order in self.order_by if order.field not in aggregate_aliases]
             for field in fields:
                 if not any(field in columns.get(table, set()) for table in tables):
                     raise ValueError(f"未知字段: {field}")

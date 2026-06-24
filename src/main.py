@@ -6,8 +6,8 @@ from fastapi.staticfiles import StaticFiles
 from graphs.graph import main_graph
 from graphs.state import GraphInput, GraphOutput
 from session import session_store
-from settings import CHART_OUTPUT_DIR, PORT, PROJECT_ROOT
-from storage.db_meta import load_examples, list_tables_for_ui
+from settings import CHART_OUTPUT_DIR, LLM_API_KEY, PORT, PROJECT_ROOT
+from storage.db_meta import check_database_health, load_examples, list_tables_for_ui
 
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 
@@ -57,12 +57,18 @@ async def run_query(req: GraphInput):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
-        raise HTTPException(status_code=500, detail="服务内部错误，请稍后重试")
+        raise HTTPException(status_code=500, detail="服务内部错误，请检查数据库、LLM 配置和服务日志后重试")
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    database = check_database_health()
+    llm = {
+        "status": "ok" if LLM_API_KEY else "warning",
+        "message": "LLM_API_KEY 已配置" if LLM_API_KEY else "未配置 LLM_API_KEY，/run 无法调用智能分析服务",
+    }
+    status = "ok" if database["status"] == "ok" and llm["status"] == "ok" else "warning"
+    return {"status": status, "service": {"status": "ok"}, "database": database, "llm": llm}
 
 
 def start_server():

@@ -1,5 +1,3 @@
-import json
-
 from langchain_core.runnables import RunnableConfig
 
 from graphs.state import GlobalState
@@ -23,9 +21,15 @@ def intent_analysis_node(state: GlobalState, _config: RunnableConfig) -> dict:
             raise ValueError("解析结果不是 JSON 对象")
         plan = parse_query_plan(raw)
         chart_config = raw.get("chart_config")
-    except (json.JSONDecodeError, ValueError) as e:
+    except ValueError as e:
         return {
-            "error_message": f"无法理解你的问题，请换个说法或补充更多信息。{e}",
+            "error_message": f"无法生成可执行的查询计划：{e}",
+            "query_plan": None,
+            "chart_config": None,
+        }
+    except Exception:
+        return {
+            "error_message": "调用智能分析服务失败，请确认 LLM_API_KEY、LLM_BASE_URL 和网络连接是否正常。",
             "query_plan": None,
             "chart_config": None,
         }
