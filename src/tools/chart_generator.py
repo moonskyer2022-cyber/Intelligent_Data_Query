@@ -12,10 +12,24 @@ from settings import CHART_OUTPUT_DIR
 
 _CHINESE_FONT = None
 _CHART_KEYWORDS = (
-    "图表", "图形", "可视化", "画图", "绘制",
-    "柱状图", "条形图", "折线图", "饼图", "圆饼图",
-    "趋势图", "对比图", "分布图", "统计图",
-    "chart", "graph", "plot", "visualization",
+    "图表",
+    "图形",
+    "可视化",
+    "画图",
+    "绘制",
+    "柱状图",
+    "条形图",
+    "折线图",
+    "饼图",
+    "圆饼图",
+    "趋势图",
+    "对比图",
+    "分布图",
+    "统计图",
+    "chart",
+    "graph",
+    "plot",
+    "visualization",
 )
 
 
@@ -64,7 +78,7 @@ def _extract_data(data: list[dict[str, Any]], x_field: str, y_field: str):
 
 def should_generate_chart(user_question: str) -> bool:
     q = user_question.lower()
-    return any(kw in q for kw in _CHART_KEYWORDS)
+    return any(keyword in q for keyword in _CHART_KEYWORDS)
 
 
 def infer_chart_config(user_question: str, data: list[dict[str, Any]]) -> dict[str, str]:
@@ -78,34 +92,39 @@ def infer_chart_config(user_question: str, data: list[dict[str, Any]]) -> dict[s
     }
 
     user_lower = user_question.lower()
-    if any(kw in user_lower for kw in ("饼图", "圆饼图", "pie", "占比", "比例", "分布")):
+    if any(keyword in user_lower for keyword in ("饼图", "圆饼图", "pie", "占比", "比例", "分布")):
         config["chart_type"] = "pie"
-    elif any(kw in user_lower for kw in ("折线图", "line", "趋势", "变化", "走势")):
+    elif any(keyword in user_lower for keyword in ("折线图", "line", "趋势", "变化", "走势")):
         config["chart_type"] = "line"
-    elif any(kw in user_lower for kw in ("条形图", "水平", "horizontal")):
+    elif any(keyword in user_lower for keyword in ("条形图", "水平", "horizontal")):
         config["chart_type"] = "horizontal_bar"
 
     if data:
         sample = data[0].get("fields", data[0]) if isinstance(data[0], dict) else {}
         fields = list(sample.keys())
 
-        name_fields = [f for f in fields if f in (
-            "product_name", "category_name", "user_name", "brand", "region",
-            "province", "member_level", "order_no",
-        ) or "name" in f or f in ("region", "channel")]
+        name_fields = [
+            field
+            for field in fields
+            if field in ("product_name", "category_name", "user_name", "brand", "region", "province", "member_level", "order_no")
+            or "name" in field
+            or field in ("region", "channel")
+        ]
         config["x_field"] = name_fields[0] if name_fields else (fields[0] if fields else "")
 
-        value_fields = [f for f in fields if f in (
-            "total_amount", "line_amount", "discount_amount", "price", "quantity", "stock", "cost",
-        )]
+        value_fields = [
+            field
+            for field in fields
+            if field in ("total_amount", "line_amount", "discount_amount", "price", "quantity", "stock", "cost")
+        ]
         if not value_fields:
-            value_fields = [f for f in fields if any(k in f for k in ("amount", "price", "quantity", "stock"))]
+            value_fields = [field for field in fields if any(key in field for key in ("amount", "price", "quantity", "stock"))]
         if value_fields:
             config["y_field"] = value_fields[0]
         else:
-            for f in fields:
-                if isinstance(sample.get(f), (int, float)):
-                    config["y_field"] = f
+            for field in fields:
+                if isinstance(sample.get(field), (int, float)):
+                    config["y_field"] = field
                     break
 
     if "销售" in user_question or "金额" in user_question or "gmv" in user_lower:
@@ -165,7 +184,7 @@ def generate_chart(
     elif chart_type == "pie":
         non_zero = [(label, val) for label, val in zip(labels, values) if val > 0]
         if not non_zero:
-            raise ValueError("没有有效非零数据")
+            raise ValueError("没有有效的非零数据")
         pie_labels, pie_values = zip(*non_zero)
         ax.pie(pie_values, labels=pie_labels, autopct="%1.1f%%", startangle=90)
     elif chart_type == "horizontal_bar":

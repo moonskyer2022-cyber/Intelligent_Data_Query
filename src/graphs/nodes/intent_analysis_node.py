@@ -25,7 +25,7 @@ def intent_analysis_node(state: GlobalState, _config: RunnableConfig) -> dict:
         chart_config = raw.get("chart_config")
     except (json.JSONDecodeError, ValueError) as e:
         return {
-            "error_message": f"无法理解您的问题，请换个说法或补充更多信息。({e})",
+            "error_message": f"无法理解你的问题，请换个说法或补充更多信息。{e}",
             "query_plan": None,
             "chart_config": None,
         }

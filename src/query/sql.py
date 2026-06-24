@@ -71,8 +71,8 @@ def _from_join(primary_logical: str, joins: list[JoinSpec]) -> tuple[str, list[t
             raise ValueError(f"缺少表关联: {prev_sql} -> {join_sql}")
         alias = _alias(len(table_map))
         table_map.append((join.table_name, join_sql, alias))
-        jt = "LEFT JOIN" if join.join_type == "left" else "INNER JOIN"
-        sql += f" {jt} `{join_sql}` AS `{alias}` ON `{table_map[-2][2]}`.`{pk}` = `{alias}`.`{fk}`"
+        join_type = "LEFT JOIN" if join.join_type == "left" else "INNER JOIN"
+        sql += f" {join_type} `{join_sql}` AS `{alias}` ON `{table_map[-2][2]}`.`{pk}` = `{alias}`.`{fk}`"
         prev_sql = join_sql
 
     return sql, table_map
@@ -86,31 +86,30 @@ def build_sql(plan: QueryPlan) -> tuple[str, list[Any]]:
         sql_t = sql_table(plan.table_name)
         table_map = [(plan.table_name, sql_t, _alias(0))]
         cols = plan.field_names or sorted(columns.get(sql_t, []))
-        sql = f"SELECT {', '.join(_field_ref(c, table_map) for c in cols)} FROM `{sql_t}` AS `{table_map[0][2]}`"
+        sql = f"SELECT {', '.join(_field_ref(col, table_map) for col in cols)} FROM `{sql_t}` AS `{table_map[0][2]}`"
         filt = plan.filter.model_dump() if plan.filter else None
         sql += _build_filter(table_map, filt, params)
         if plan.order_by:
             sql += " ORDER BY " + ", ".join(
-                f"{_field_ref(o.field, table_map)} {o.direction.upper()}" for o in plan.order_by
+                f"{_field_ref(order.field, table_map)} {order.direction.upper()}" for order in plan.order_by
             )
         sql += " LIMIT %s"
         params.append(plan.page_size)
         return sql, params
 
     if plan.query_type == "multi":
-        pc = plan.primary_conditions
+        primary_conditions = plan.primary_conditions
         from_sql, table_map = _from_join(plan.primary_table, plan.join_tables)
-        fields = (pc.field_names if pc else []) or [
-            f for _, sql_t, _ in table_map for f in sorted(columns.get(sql_t, []))
+        fields = (primary_conditions.field_names if primary_conditions else []) or [
+            field for _, sql_t, _ in table_map for field in sorted(columns.get(sql_t, []))
         ]
-        sql = f"SELECT {', '.join(_field_ref(f, table_map) for f in fields)} FROM {from_sql}"
-        filt = pc.filter.model_dump() if pc and pc.filter else None
+        sql = f"SELECT {', '.join(_field_ref(field, table_map) for field in fields)} FROM {from_sql}"
+        filt = primary_conditions.filter.model_dump() if primary_conditions and primary_conditions.filter else None
         sql += _build_filter(table_map, filt, params)
         sql += " LIMIT %s"
         params.append(plan.page_size)
         return sql, params
 
-    logical = plan.primary_table if plan.join_tables else plan.table_name
     if plan.join_tables:
         from_sql, table_map = _from_join(plan.primary_table, plan.join_tables)
     else:
@@ -118,7 +117,7 @@ def build_sql(plan: QueryPlan) -> tuple[str, list[Any]]:
         table_map = [(plan.table_name, sql_t, _alias(0))]
         from_sql = f"`{sql_t}` AS `{table_map[0][2]}`"
 
-    select_parts = [_field_ref(f, table_map) for f in plan.group_by]
+    select_parts = [_field_ref(field, table_map) for field in plan.group_by]
     for agg in plan.aggregates:
         col = _field_ref(agg.field, table_map)
         alias = agg.alias or f"{agg.func}_{agg.field}"
@@ -130,10 +129,10 @@ def build_sql(plan: QueryPlan) -> tuple[str, list[Any]]:
     filt = plan.filter.model_dump() if plan.filter else None
     sql += _build_filter(table_map, filt, params)
     if plan.group_by:
-        sql += " GROUP BY " + ", ".join(_field_ref(f, table_map) for f in plan.group_by)
+        sql += " GROUP BY " + ", ".join(_field_ref(field, table_map) for field in plan.group_by)
     if plan.order_by:
         sql += " ORDER BY " + ", ".join(
-            f"{_field_ref(o.field, table_map)} {o.direction.upper()}" for o in plan.order_by
+            f"{_field_ref(order.field, table_map)} {order.direction.upper()}" for order in plan.order_by
         )
     sql += " LIMIT %s"
     params.append(plan.page_size)

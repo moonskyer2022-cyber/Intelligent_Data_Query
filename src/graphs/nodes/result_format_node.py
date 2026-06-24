@@ -17,7 +17,7 @@ def result_format_node(state: GlobalState, _config: RunnableConfig) -> dict:
             user_question=state.user_question,
             chat_history=session_store.format_history(state.session_id),
             query_result=summarize_results(state.query_result),
-            has_chart="有" if state.chart_url else "没有",
+            has_chart="已" if state.chart_url else "未",
         )
         answer = extract_text(text)
 

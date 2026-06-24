@@ -56,8 +56,8 @@ async def run_query(req: GraphInput):
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="服务内部错误，请稍后重试")
 
 
 @app.get("/health")
@@ -75,3 +75,4 @@ def start_server():
         reload=True,
         reload_dirs=[str(PROJECT_ROOT / "src"), str(FRONTEND_DIR)],
     )
+

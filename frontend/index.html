@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AIQuery · 智能问数</title>
+  <title>AIQuery | 智能问数</title>
   <link rel="stylesheet" href="/assets/style.css" />
 </head>
 <body>
@@ -19,7 +19,7 @@
 
       <div class="status-card">
         <span class="status-dot" id="statusDot"></span>
-        <span id="statusText">检测服务中…</span>
+        <span id="statusText">检测服务中...</span>
       </div>
 
       <section class="sidebar-section">
@@ -36,14 +36,14 @@
     <main class="main">
       <header class="main-header">
         <h2>数据问答</h2>
-        <p>用自然语言提问，自动查询 ai_query 数据库并生成回答</p>
+        <p>用自然语言提问，自动查询 ai_query 数据库并生成结果说明。</p>
       </header>
 
       <div class="chat" id="chat">
         <div class="welcome" id="welcome">
           <div class="welcome-icon">📊</div>
           <h3>开始提问吧</h3>
-          <p>例如：本月订单 GMV 是多少、各省份订单金额排名、各类目商品销量</p>
+          <p>例如：本月订单 GMV 是多少、各省份订单金额排名、各类目商品销量对比。</p>
         </div>
       </div>
 
@@ -51,7 +51,7 @@
         <textarea
           id="questionInput"
           rows="1"
-          placeholder="输入你的问题，Enter 发送，Shift+Enter 换行…"
+          placeholder="输入你的问题，Enter 发送，Shift + Enter 换行"
           maxlength="2000"
         ></textarea>
         <button type="submit" id="sendBtn" aria-label="发送">

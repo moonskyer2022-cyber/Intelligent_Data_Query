@@ -37,3 +37,4 @@ def chart_generation_node(state: GlobalState, _config: RunnableConfig) -> dict:
         chart_url = None
 
     return {"chart_url": chart_url}
+

@@ -94,20 +94,20 @@ def schema_prompt() -> str:
         lines.append(f"- {logical}({sql})：{', '.join(fields)}")
 
     lines.append("\n# 表关联")
-    lines.extend(f"- {j}" for j in PROMPT_JOINS)
+    lines.extend(f"- {join}" for join in PROMPT_JOINS)
 
     metrics = _load_metric_hints()
     if metrics:
         lines.append("\n# 常用指标字段")
-        lines.extend(f"- {m}" for m in metrics)
+        lines.extend(f"- {metric}" for metric in metrics)
 
     lines.append(
         "\n# 查询建议\n"
-        "- 订单总额/GMV/成交 → 订单主表 orders.total_amount\n"
-        "- 明细销量/行金额 → 订单明细表 order_item\n"
-        "- 商品与类目 → 商品表 + 类目表\n"
-        "- 用户维度 → 用户表 + 订单主表\n"
-        "- 历史扁平采购流水 → 采购记录表 purchase_record"
+        "- 订单总额 / GMV / 成交额 -> 订单主表 orders.total_amount\n"
+        "- 明细销量 / 行金额 -> 订单明细表 order_item\n"
+        "- 商品与类目 -> 商品表 + 类目表\n"
+        "- 用户维度 -> 用户表 + 订单主表\n"
+        "- 历史采购流水 -> 采购记录表 purchase_record"
     )
     return "\n".join(lines)
 
@@ -134,11 +134,11 @@ def _load_metric_hints() -> list[str]:
                 )
                 rows = cur.fetchall()
         hints = []
-        for r in rows:
-            logical = SQL_TO_LOGICAL.get(r["table_name"], r["table_name"])
-            name = r["business_name"] or r["column_name"]
-            desc = r["description"] or ""
-            hints.append(f"{logical}.{r['column_name']}（{name}）{desc}")
+        for row in rows:
+            logical = SQL_TO_LOGICAL.get(row["table_name"], row["table_name"])
+            name = row["business_name"] or row["column_name"]
+            desc = row["description"] or ""
+            hints.append(f"{logical}.{row['column_name']}（{name}）：{desc}")
         return hints
     except Exception:
         return []
@@ -165,7 +165,7 @@ def load_examples(limit: int = 8) -> list[str]:
                     """,
                     (limit,),
                 )
-                return [r["question"] for r in cur.fetchall()]
+                return [row["question"] for row in cur.fetchall()]
     except Exception:
         return [
             "查询所有商品名称和价格",

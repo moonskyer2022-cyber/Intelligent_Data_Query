@@ -6,8 +6,15 @@ from storage.db_meta import TABLE_ORDERS, TABLE_PRODUCT, check_field, load_colum
 
 ALLOWED_FUNCS = {"sum", "count", "avg", "max", "min"}
 ALLOWED_OPS = {
-    "is", "isNot", "contains", "isEmpty", "isNotEmpty",
-    "isGreater", "isGreaterEqual", "isLess", "isLessEqual",
+    "is",
+    "isNot",
+    "contains",
+    "isEmpty",
+    "isNotEmpty",
+    "isGreater",
+    "isGreaterEqual",
+    "isLess",
+    "isLessEqual",
 }
 
 
@@ -73,31 +80,32 @@ class QueryPlan(BaseModel):
         columns = load_columns()
         if self.query_type == "single":
             sql_t = sql_table(self.table_name)
-            for f in self.field_names:
-                check_field(sql_t, f)
+            for field in self.field_names:
+                check_field(sql_t, field)
             if self.filter:
-                for c in self.filter.conditions:
-                    check_field(sql_t, c.field_name)
+                for condition in self.filter.conditions:
+                    check_field(sql_t, condition.field_name)
         elif self.query_type == "multi":
             sql_table(self.primary_table)
             if not self.join_tables:
                 raise ValueError("多表查询缺少 join_tables")
-            for j in self.join_tables:
-                sql_table(j.table_name)
+            for join in self.join_tables:
+                sql_table(join.table_name)
         elif self.query_type == "aggregate":
             tables = [sql_table(self.primary_table if self.join_tables else self.table_name)]
-            for j in self.join_tables:
-                tables.append(sql_table(j.table_name))
-            fields = self.group_by + [a.field for a in self.aggregates] + [o.field for o in self.order_by]
-            for f in fields:
-                if not any(f in columns.get(t, set()) for t in tables):
-                    raise ValueError(f"未知字段: {f}")
+            for join in self.join_tables:
+                tables.append(sql_table(join.table_name))
+            fields = self.group_by + [agg.field for agg in self.aggregates] + [order.field for order in self.order_by]
+            for field in fields:
+                if not any(field in columns.get(table, set()) for table in tables):
+                    raise ValueError(f"未知字段: {field}")
         return self
 
 
 def parse_query_plan(raw: dict[str, Any]) -> QueryPlan:
     if not raw:
         raise ValueError("查询条件为空")
+
     payload = raw if ("query_type" in raw or "table_name" in raw or "primary_table" in raw) else raw.get("query_conditions", raw)
     if not isinstance(payload, dict):
         raise ValueError("查询条件格式无效")

@@ -49,20 +49,24 @@ function initTables(tables) {
 
 async function loadMeta() {
   try {
-    const [exRes, tbRes] = await Promise.all([
+    const [exampleRes, tableRes] = await Promise.all([
       fetch(`${API_BASE}/examples`),
       fetch(`${API_BASE}/tables`),
     ]);
-    if (exRes.ok) {
-      const data = await exRes.json();
+    if (exampleRes.ok) {
+      const data = await exampleRes.json();
       initExamples(data.examples || []);
     }
-    if (tbRes.ok) {
-      const data = await tbRes.json();
+    if (tableRes.ok) {
+      const data = await tableRes.json();
       initTables(data.tables || []);
     }
   } catch {
-    initExamples(["本月订单GMV是多少？", "各省份订单金额排名", "查询所有商品名称和价格"]);
+    initExamples([
+      "本月订单GMV是多少？",
+      "各省份订单金额排名",
+      "查询所有商品名称和价格",
+    ]);
   }
 }
 
