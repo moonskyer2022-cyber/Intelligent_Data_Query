@@ -13,7 +13,10 @@ class SessionStore:
         return list(self._sessions.get(session_id, []))
 
     def format_history(self, session_id: Optional[str]) -> str:
-        history = self.get_history(session_id)
+        return self.format_messages(self.get_history(session_id))
+
+    @staticmethod
+    def format_messages(history: list[dict[str, str]]) -> str:
         if not history:
             return "（无历史对话）"
         return "\n".join(f"{m['role']}: {m['content']}" for m in history)

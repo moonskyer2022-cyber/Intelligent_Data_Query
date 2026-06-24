@@ -15,7 +15,7 @@ def result_format_node(state: GlobalState, _config: RunnableConfig) -> dict:
         text = run_llm_cfg(
             "result_format_llm_cfg",
             user_question=state.user_question,
-            chat_history=session_store.format_history(state.session_id),
+            chat_history=session_store.format_messages(state.chat_history),
             query_result=summarize_results(state.query_result),
             has_chart="已" if state.chart_url else "未",
         )

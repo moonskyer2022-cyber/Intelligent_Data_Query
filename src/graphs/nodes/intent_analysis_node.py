@@ -15,7 +15,7 @@ def intent_analysis_node(state: GlobalState, _config: RunnableConfig) -> dict:
         text = run_llm_cfg(
             "intent_analysis_llm_cfg",
             user_question=state.user_question,
-            chat_history=session_store.format_history(state.session_id),
+            chat_history=session_store.format_messages(state.chat_history),
             db_schema=schema_prompt(),
         )
         raw = parse_json_response(text)
