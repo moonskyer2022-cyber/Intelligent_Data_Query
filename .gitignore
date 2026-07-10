@@ -9,3 +9,6 @@ build/
 data/*.db
 output/charts/*.png
 .pytest_cache/
+.tmp_mpl/
+tmp-*.log
+tmp-uvicorn-*.log
