@@ -15,7 +15,7 @@ async def run_query(question: str) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AIQuery 本地智能问数")
+    parser = argparse.ArgumentParser(description="智能问数（Intelligent Data Query）")
     parser.add_argument("-q", "--question", default="查询所有商品及其价格")
     parser.add_argument("--server", action="store_true")
     args = parser.parse_args()

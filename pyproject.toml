@@ -1,7 +1,7 @@
 [project]
 name = "aiquery"
 version = "0.1.0"
-description = "本地智能问数 - LangGraph + MySQL + DeepSeek"
+description = "智能问数（Intelligent Data Query） - LangGraph + MySQL + OpenAI-compatible LLM"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",

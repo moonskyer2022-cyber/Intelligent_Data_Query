@@ -24,3 +24,8 @@ class GraphOutput(BaseModel):
     final_answer: str
     chart_url: Optional[str] = None
     session_id: Optional[str] = None
+    query_plan: Optional[dict[str, Any]] = None
+    rows: list[dict[str, Any]] = Field(default_factory=list)
+    execution_ms: int = 0
+    request_id: Optional[str] = None
+    error_code: Optional[str] = None

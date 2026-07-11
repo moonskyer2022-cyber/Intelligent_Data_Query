@@ -93,6 +93,10 @@ Copy-Item .env.example .env
 LLM_API_KEY=你的模型 API Key
 LLM_BASE_URL=https://你的模型服务地址/v1
 LLM_MODEL=你的模型名称
+DEMO_MODE=false
+API_KEY=
+CORS_ORIGINS=http://127.0.0.1:8000,http://localhost:8000
+REQUEST_TIMEOUT_SECONDS=45
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
@@ -111,6 +115,14 @@ mysql -h 127.0.0.1 -P 3306 -u root -p < scripts/init_mysql.sql
 ```powershell
 python run.py --server
 ```
+
+也可以使用一键 Demo 脚本：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/demo.ps1 -Install
+```
+
+如果现场没有可用的 LLM API，可在 `.env` 中设置 `DEMO_MODE=true`，使用固定示例问题进行稳定演示；该模式仍需要可连接的 MySQL 和演示数据。
 
 访问地址：
 
@@ -143,6 +155,8 @@ python run.py -q "各省份订单金额排名，并生成图表"
 }
 ```
 
+成功响应还会返回 `query_plan`、`rows`、`execution_ms`、`request_id` 等演示辅助信息；部署时可根据安全要求隐藏查询计划和结果明细。
+
 ## 查询流程与安全策略
 
 查询工作流包含以下步骤：
@@ -160,6 +174,8 @@ python run.py -q "各省份订单金额排名，并生成图表"
 - 只允许查询元数据中登记的业务表和字段；
 - SQL 由应用层根据结构化查询计划生成，不直接执行模型输出的 SQL 文本；
 - 数据库连接、LLM Key 和密码通过 `.env` 配置，不写入仓库；
+- 设置 `API_KEY` 后，`/run`、`/examples` 和 `/tables` 需要通过 `X-API-Key` 请求头访问；
+- SQL 执行层只接受应用生成的只读 `SELECT` 查询，并限制单次返回行数；
 - 服务健康检查会分别报告数据库与 LLM 配置状态；
 - 生成的图表和运行日志属于本地运行产物，默认不提交到 Git。
 
@@ -191,7 +207,7 @@ Intelligent_Data_Query/
 ├── config/                 # LLM 提示词与结果格式配置
 ├── docs/assets/            # 项目原型和展示素材
 ├── frontend/               # Web 前端资源
-├── scripts/                # MySQL 初始化脚本
+├── scripts/                # 初始化、Demo 启动和健康检查脚本
 ├── src/
 │   ├── graphs/             # LangGraph 工作流与节点
 │   ├── llm/                # LLM 客户端与响应解析
@@ -221,6 +237,8 @@ python -m unittest discover -s tests -v
 - 查询计划字段与聚合校验；
 - SQL 生成；
 - 健康检查接口。
+- Demo 模式确定性查询；
+- API Key 保护接口。
 
 提交前建议执行：
 

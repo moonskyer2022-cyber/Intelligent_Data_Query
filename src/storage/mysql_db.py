@@ -7,7 +7,16 @@ from pymysql.cursors import DictCursor
 
 from query.schema import QueryPlan
 from query.sql import build_sql
-from settings import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
+from settings import (
+    DB_CONNECT_TIMEOUT,
+    DB_HOST,
+    DB_NAME,
+    DB_PASSWORD,
+    DB_PORT,
+    DB_READ_TIMEOUT,
+    DB_USER,
+    DB_WRITE_TIMEOUT,
+)
 
 
 def _serialize(value: Any) -> Any:
@@ -30,10 +39,15 @@ class MySQLDataStore:
             "database": DB_NAME,
             "charset": "utf8mb4",
             "cursorclass": DictCursor,
+            "connect_timeout": DB_CONNECT_TIMEOUT,
+            "read_timeout": DB_READ_TIMEOUT,
+            "write_timeout": DB_WRITE_TIMEOUT,
         }
 
     def execute(self, plan: QueryPlan) -> list[dict[str, Any]]:
         sql, params = build_sql(plan)
+        if not sql.lstrip().upper().startswith("SELECT"):
+            raise ValueError("仅允许执行只读 SELECT 查询")
         with pymysql.connect(**self._conn_params) as conn:
             with conn.cursor() as cur:
                 cur.execute(sql, params)

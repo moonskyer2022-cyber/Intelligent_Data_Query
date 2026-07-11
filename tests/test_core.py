@@ -1,4 +1,5 @@
 import sys
+import json
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -9,6 +10,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from fastapi.testclient import TestClient
 
 import main
+import llm.client as llm_client
 from llm.client import parse_json_response
 from query.schema import AggregateSpec, OrderSpec, QueryPlan, TABLE_ORDERS
 from query.sql import build_sql
@@ -78,6 +80,55 @@ class HealthEndpointTests(unittest.TestCase):
         self.assertEqual(body["status"], "warning")
         self.assertEqual(body["database"]["status"], "ok")
         self.assertEqual(body["llm"]["status"], "warning")
+
+
+class DemoModeTests(unittest.TestCase):
+    def test_demo_mode_returns_deterministic_intent(self):
+        with patch.object(llm_client, "DEMO_MODE", True):
+            payload = json.loads(
+                llm_client.run_llm_cfg(
+                    "intent_analysis_llm_cfg",
+                    user_question="各省份订单金额排名",
+                )
+            )
+
+        self.assertEqual(payload["query_type"], "aggregate")
+        self.assertEqual(payload["aggregates"][0]["alias"], "gmv")
+
+
+class ApiKeyTests(unittest.TestCase):
+    def test_protected_endpoint_requires_api_key_when_enabled(self):
+        with patch.object(main, "API_KEY", "demo-secret"):
+            response = TestClient(main.app).get("/tables")
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json()["detail"]["code"], "UNAUTHORIZED")
+
+
+class RunEndpointTests(unittest.TestCase):
+    def test_run_returns_demo_metadata(self):
+        class FakeGraph:
+            async def ainvoke(self, payload):
+                return {
+                    "final_answer": "演示结果",
+                    "chart_url": None,
+                    "query_plan": {"query_type": "aggregate"},
+                    "query_result": [{"record_id": "1", "fields": {"gmv": 100}}],
+                }
+
+        with patch.object(main, "main_graph", FakeGraph()):
+            response = TestClient(main.app).post(
+                "/run",
+                json={"user_question": "订单 GMV", "session_id": "demo"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["final_answer"], "演示结果")
+        self.assertEqual(body["query_plan"]["query_type"], "aggregate")
+        self.assertEqual(body["rows"][0]["fields"]["gmv"], 100)
+        self.assertGreaterEqual(body["execution_ms"], 0)
+        self.assertTrue(body["request_id"])
 
 
 if __name__ == "__main__":

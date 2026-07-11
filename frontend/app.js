@@ -155,6 +155,7 @@ function appendMessage(role, content, options = {}) {
   const chart = options.chartUrl
     ? `<figure class="chart-frame"><img src="${options.chartUrl.startsWith("http") ? options.chartUrl : `${API_BASE}${options.chartUrl}`}" alt="分析结果图表" /></figure>`
     : "";
+  const details = options.detailsHtml || "";
 
   article.innerHTML = `
     <header>
@@ -162,11 +163,25 @@ function appendMessage(role, content, options = {}) {
       <span>${escapeHtml(options.meta || "")}</span>
     </header>
     <div class="message-body">${escapeHtml(content)}</div>
+    ${details}
     ${chart}
   `;
   chat.appendChild(article);
   scrollToBottom();
   return article;
+}
+
+function renderResultDetails(data) {
+  const rows = Array.isArray(data.rows) ? data.rows.slice(0, 8) : [];
+  const plan = data.query_plan ? escapeHtml(JSON.stringify(data.query_plan, null, 2)) : "暂无结构化查询计划";
+  const rowsHtml = rows.length
+    ? `<div class="result-rows">${rows.map((row) => {
+        const fields = row.fields || row;
+        return `<div class="result-row">${Object.entries(fields).map(([key, value]) => `<span><b>${escapeHtml(key)}</b>${escapeHtml(value)}</span>`).join("")}</div>`;
+      }).join("")}</div>`
+    : "<p class=\"result-empty\">暂无结果明细</p>";
+  const elapsed = Number.isFinite(data.execution_ms) ? ` · ${data.execution_ms} ms` : "";
+  return `<details class="result-details"><summary>查看查询过程与结果${elapsed}</summary><div class="result-details-body"><strong>结构化查询计划</strong><pre>${plan}</pre><strong>结果明细（最多展示 8 条）</strong>${rowsHtml}</div></details>`;
 }
 
 function appendProgress() {
@@ -260,7 +275,10 @@ async function submitQuestion() {
 
     progress.remove();
     if (!response.ok) {
-      appendMessage("assistant", "本次分析没有成功，请稍后重试或换一个更明确的问题。", { meta: "分析失败" }).classList.add("error");
+      const errorPayload = await response.json().catch(() => ({}));
+      const detail = errorPayload.detail || {};
+      const message = typeof detail === "string" ? detail : detail.message;
+      appendMessage("assistant", message || "本次分析没有成功，请稍后重试或换一个更明确的问题。", { meta: detail.code || "分析失败" }).classList.add("error");
       runBadge.textContent = "分析失败";
       return;
     }
@@ -268,6 +286,7 @@ async function submitQuestion() {
     const data = await response.json();
     appendMessage("assistant", data.final_answer || "暂未得到有效结论。", {
       chartUrl: data.chart_url,
+      detailsHtml: renderResultDetails(data),
       meta: data.chart_url ? "已生成图表" : "已生成结论",
     });
     runBadge.textContent = data.chart_url ? "已生成图表" : "已生成结论";

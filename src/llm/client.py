@@ -6,7 +6,7 @@ from jinja2 import Template
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
-from settings import CONFIG_DIR, LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
+from settings import CONFIG_DIR, DEMO_MODE, LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_TIMEOUT_SECONDS
 
 
 def load_llm_cfg(name: str) -> dict[str, Any]:
@@ -22,6 +22,8 @@ def get_llm(temperature: float = 0.1) -> ChatOpenAI:
         api_key=LLM_API_KEY,
         base_url=LLM_BASE_URL,
         temperature=temperature,
+        timeout=LLM_TIMEOUT_SECONDS,
+        max_retries=0,
     )
 
 
@@ -32,10 +34,59 @@ def invoke_llm(messages: list[BaseMessage], cfg: dict[str, Any]) -> str:
 
 
 def run_llm_cfg(cfg_name: str, **prompt_vars: Any) -> str:
+    if DEMO_MODE:
+        return run_demo_cfg(cfg_name, prompt_vars)
     cfg = load_llm_cfg(cfg_name)
     prompt = Template(cfg["up"]).render(**prompt_vars)
     messages = [SystemMessage(content=cfg["sp"]), HumanMessage(content=prompt)]
     return invoke_llm(messages, cfg)
+
+
+def run_demo_cfg(cfg_name: str, prompt_vars: dict[str, Any]) -> str:
+    """Return deterministic responses for a repeatable local demonstration."""
+    if cfg_name == "intent_analysis_llm_cfg":
+        question = str(prompt_vars.get("user_question", ""))
+        if "商品" in question and ("价格" in question or "名称" in question):
+            return json.dumps(
+                {
+                    "query_type": "single",
+                    "table_name": "商品表",
+                    "field_names": ["product_name", "price"],
+                    "page_size": 100,
+                },
+                ensure_ascii=False,
+            )
+        if "省" in question or "地区" in question or "排名" in question:
+            return json.dumps(
+                {
+                    "query_type": "aggregate",
+                    "table_name": "订单主表",
+                    "group_by": ["province"],
+                    "aggregates": [{"field": "total_amount", "func": "sum", "alias": "gmv"}],
+                    "order_by": [{"field": "gmv", "direction": "desc"}],
+                    "page_size": 100,
+                    "chart_config": {"chart_type": "bar", "x_field": "province", "y_field": "gmv"},
+                },
+                ensure_ascii=False,
+            )
+        return json.dumps(
+            {
+                "query_type": "aggregate",
+                "table_name": "订单主表",
+                "aggregates": [{"field": "total_amount", "func": "sum", "alias": "gmv"}],
+                "page_size": 100,
+            },
+            ensure_ascii=False,
+        )
+
+    if cfg_name == "result_format_llm_cfg":
+        question = str(prompt_vars.get("user_question", "本次问题"))
+        query_result = str(prompt_vars.get("query_result", ""))
+        has_chart = str(prompt_vars.get("has_chart", "未"))
+        chart_note = "，并已生成图表" if has_chart == "已" else ""
+        return f"演示模式已完成“{question}”查询{chart_note}。\n{query_result}"
+
+    raise ValueError(f"Demo 模式不支持配置: {cfg_name}")
 
 
 def extract_text(content: Any) -> str:
