@@ -3,355 +3,225 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AIQuery | 智能问数作品展示</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23184f5b'/%3E%3Cpath d='M21 43 28 20h8l7 23h-7l-1.3-4.7h-8L25.3 43Zm7.4-10.6h4.2L30.5 25.3Z' fill='%23fff8ef'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="/assets/style.css" />
+  <title>AIQuery | 业务问数工作台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230f766e'/%3E%3Cpath d='M17 42h6V29h-6v13Zm12 0h6V20h-6v22Zm12 0h6V12h-6v30Z' fill='white'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/assets/style.css?v=business-console-2" />
 </head>
 <body>
-  <div class="site-shell">
-    <header class="topbar">
-      <a class="brand" href="#overview" aria-label="AIQuery 首页">
-        <span class="brand-mark">AQ</span>
-        <span class="brand-copy">
+  <div class="app-shell">
+    <aside class="rail" aria-label="平台导航">
+      <a class="brand" href="#ask">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 19V9m7 10V5m7 14v-8"/></svg>
+        </span>
+        <span>
           <strong>AIQuery</strong>
-          <span>Natural Language BI Showcase</span>
+          <small>业务问数分析台</small>
         </span>
       </a>
 
-      <nav class="topnav" aria-label="页面导航">
-        <a href="#overview">概览</a>
-        <a href="#architecture">架构</a>
-        <a href="#data-model">数据模型</a>
-        <a href="#live-demo">在线演示</a>
+      <nav class="nav-list">
+        <a class="active" href="#ask">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h7"/></svg></span>
+          问数
+        </a>
+        <a href="#answer">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19V9m7 10V5m7 14v-8"/></svg></span>
+          结果
+        </a>
+        <a href="#scope">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
+          数据
+        </a>
+        <a href="#progress">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          过程
+        </a>
       </nav>
 
-      <div class="topbar-actions">
-        <a class="ghost-button" href="#test-panel">
-          <span class="button-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 3h6"></path>
-              <path d="M10 12h4"></path>
-              <path d="M12 3v3"></path>
-              <path d="M8 6h8l1 11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2Z"></path>
-            </svg>
-          </span>
-          <span>验证面板</span>
-        </a>
-        <a class="solid-button" href="#live-demo">
-          <span class="button-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"></path>
-              <path d="m12 5 7 7-7 7"></path>
-            </svg>
-          </span>
-          <span>开始演示</span>
-        </a>
-      </div>
-    </header>
+      <section class="rail-card">
+        <p>可分析内容</p>
+        <strong>订单、商品、用户、采购</strong>
+        <span>支持金额排名、销量对比、趋势观察和区域表现分析。</span>
+      </section>
+    </aside>
 
-    <main>
-      <section class="hero" id="overview">
-        <div class="hero-copy">
-          <p class="hero-kicker">AI 驱动的本地智能问数项目</p>
-          <h1>把自然语言问题，转换成可以落地的业务分析结果。</h1>
-          <p class="hero-summary">
-            AIQuery 将业务问题解析为结构化查询计划，联动本地 MySQL 数据库与 LLM，总结结果并在合适时自动生成图表。
-            这套界面同时承担作品展示和真实演示，让项目能力、工程质量与交互体验在同一页面里被看见。
-          </p>
-
-          <div class="hero-actions">
-            <a class="solid-button large" href="#live-demo">
-              <span class="button-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M8 5v14l11-7Z"></path>
-                </svg>
-              </span>
-              <span>运行实时演示</span>
-            </a>
-            <a class="ghost-button large" href="#architecture">
-              <span class="button-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                  <path d="M7 8h10"></path>
-                  <path d="M7 12h6"></path>
-                  <path d="M7 16h8"></path>
-                </svg>
-              </span>
-              <span>查看实现结构</span>
-            </a>
-          </div>
-
-          <div class="hero-facts">
-            <article>
-              <span>运行形态</span>
-              <strong>FastAPI + LangGraph</strong>
-            </article>
-            <article>
-              <span>核心数据源</span>
-              <strong>本地 MySQL / ai_query</strong>
-            </article>
-            <article>
-              <span>输出能力</span>
-              <strong>回答 / 图表 / 状态反馈</strong>
-            </article>
-          </div>
+    <main class="workspace">
+      <header class="workspace-header">
+        <div>
+          <p class="overline">Business Analytics</p>
+          <h1>智能问数分析台</h1>
         </div>
+        <div class="health-bar" aria-label="平台状态">
+          <span class="pill muted" id="servicePill">问数服务检查中</span>
+          <span class="pill muted" id="databasePill">数据连接检查中</span>
+          <span class="pill muted" id="llmPill">智能分析检查中</span>
+        </div>
+      </header>
 
-        <div class="hero-preview">
-          <div class="preview-frame">
-            <div class="preview-topline">
-              <div class="preview-tabs">
-                <span class="is-active">智能问数</span>
-                <span>查询计划</span>
-                <span>图表输出</span>
-              </div>
-              <div class="preview-health">
-                <span class="health-pill" id="heroServiceState">服务检查中</span>
-                <span class="health-pill muted" id="heroDataState">数据加载中</span>
-              </div>
+      <section class="hero-layout">
+        <section class="query-card surface-card" id="ask">
+          <div class="card-toolbar">
+            <div>
+              <p class="overline">Ask</p>
+              <h2>提出业务问题</h2>
             </div>
+            <button class="icon-button" type="button" id="clearChatBtn" title="清空会话" aria-label="清空会话">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2m-8 0 1 12h8l1-12"/></svg>
+            </button>
+          </div>
 
-            <div class="preview-main">
-              <article class="preview-conversation">
-                <div class="preview-message user">
-                  <span class="preview-avatar">你</span>
-                  <div>
-                    <h3>问题输入</h3>
-                    <p>本月各省份订单 GMV 排名，并给我一个适合汇报的图。</p>
-                  </div>
-                </div>
+          <form class="command-box" id="composer">
+            <label class="sr-only" for="questionInput">输入业务问题</label>
+            <textarea id="questionInput" rows="6" maxlength="2000" placeholder="例如：各省份订单金额排名，并生成图表"></textarea>
+            <div class="command-footer">
+              <div class="mode-tabs" aria-label="分析模式">
+                <button type="button" class="selected">自动分析</button>
+                <button type="button">结论优先</button>
+                <button type="button">图表分析</button>
+              </div>
+              <button class="run-button" type="submit" id="sendBtn">
+                <span>开始分析</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </form>
 
-                <div class="preview-message assistant">
-                  <span class="preview-avatar">AI</span>
-                  <div>
-                    <h3>执行状态</h3>
-                    <ul class="stage-list">
-                      <li class="done">意图识别与结构化计划</li>
-                      <li class="done">MySQL 聚合查询与排序</li>
-                      <li class="done">结果总结与图表建议</li>
-                    </ul>
-                  </div>
+          <div class="suggestions" id="examples" aria-label="推荐问题"></div>
+        </section>
+
+        <section class="answer-card surface-card" id="answer">
+          <div class="card-toolbar">
+            <div>
+              <p class="overline">Answer</p>
+              <h2>分析结果</h2>
+            </div>
+            <div class="view-switch" role="tablist" aria-label="结果视图">
+              <button class="active" type="button" data-view="chart">图表</button>
+              <button type="button" data-view="table">明细</button>
+            </div>
+          </div>
+
+          <div class="answer-stage">
+            <div class="demo-answer" id="welcome">
+              <article class="insight-banner">
+                <span class="checkmark" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
+                </span>
+                <div>
+                  <h3>广东省订单金额最高，前三省份贡献超过总额的 54%</h3>
+                  <p>建议优先关注头部省份的商品结构、复购表现和区域活动策略。</p>
                 </div>
               </article>
 
-              <article class="preview-visual">
-                <div class="mini-chart">
-                  <div class="chart-grid"></div>
-                  <div class="chart-bars" aria-hidden="true">
-                    <span style="height: 72%"></span>
-                    <span style="height: 88%"></span>
-                    <span style="height: 54%"></span>
-                    <span style="height: 66%"></span>
-                    <span style="height: 43%"></span>
+              <div class="metric-row">
+                <article><span>订单总金额</span><strong>¥35,678.42 万</strong></article>
+                <article><span>排名第一</span><strong>广东省</strong></article>
+                <article><span>前三贡献</span><strong>54%</strong></article>
+                <article><span>覆盖省份</span><strong>31</strong></article>
+              </div>
+
+              <div class="visual-tabs">
+              <div class="visual-panel active" data-panel="chart">
+                <div class="chart-head">
+                  <strong>各省份订单金额排名</strong>
+                  <span>单位：万元</span>
+                </div>
+                <div class="chart-canvas" aria-label="各省份订单金额排名图">
+                  <svg class="business-chart" viewBox="0 0 760 260" role="img" aria-label="广东、江苏、浙江等省份订单金额排名">
+                    <g class="grid-lines">
+                      <path d="M58 34H724M58 82H724M58 130H724M58 178H724M58 226H724"/>
+                    </g>
+                    <g class="axis-labels">
+                      <text x="20" y="38">12000</text>
+                      <text x="28" y="86">9000</text>
+                      <text x="28" y="134">6000</text>
+                      <text x="28" y="182">3000</text>
+                      <text x="45" y="230">0</text>
+                    </g>
+                    <g class="bars-svg">
+                      <rect x="76" y="62" width="46" height="164" rx="8"/>
+                      <rect x="160" y="86" width="46" height="140" rx="8"/>
+                      <rect x="244" y="104" width="46" height="122" rx="8"/>
+                      <rect x="328" y="124" width="46" height="102" rx="8"/>
+                      <rect x="412" y="142" width="46" height="84" rx="8"/>
+                      <rect x="496" y="156" width="46" height="70" rx="8"/>
+                      <rect x="580" y="168" width="46" height="58" rx="8"/>
+                      <rect x="664" y="178" width="46" height="48" rx="8"/>
+                    </g>
+                    <path class="line-svg" d="M99 50C150 74 180 83 225 94C282 108 322 118 370 130C425 143 470 154 521 164C574 174 625 182 687 190"/>
+                    <g class="x-labels">
+                      <text x="78" y="250">广东</text>
+                      <text x="162" y="250">江苏</text>
+                      <text x="246" y="250">浙江</text>
+                      <text x="330" y="250">山东</text>
+                      <text x="414" y="250">河南</text>
+                      <text x="498" y="250">四川</text>
+                      <text x="582" y="250">湖北</text>
+                      <text x="666" y="250">福建</text>
+                    </g>
+                  </svg>
+                </div>
+                </div>
+                <div class="visual-panel" data-panel="table">
+                  <div class="simple-table">
+                    <div><strong>省份</strong><strong>订单金额</strong><strong>占比</strong></div>
+                    <div><span>广东省</span><span>¥9,856.32 万</span><span>27.6%</span></div>
+                    <div><span>江苏省</span><span>¥6,714.08 万</span><span>18.8%</span></div>
+                    <div><span>浙江省</span><span>¥4,692.35 万</span><span>13.1%</span></div>
                   </div>
                 </div>
-                <div class="preview-caption">
-                  <strong>图表预览</strong>
-                  <p>柱状图、条形图、折线图、饼图可按问题上下文自动推荐。</p>
-                </div>
-              </article>
-            </div>
-
-            <div class="preview-footer">
-              <div>
-                <span>输出风格</span>
-                <strong>业务可读、演示友好</strong>
-              </div>
-              <div>
-                <span>健康检查</span>
-                <strong id="heroHealthSummary">等待服务响应</strong>
-              </div>
-              <div>
-                <span>当前模式</span>
-                <strong>作品展示 + Live Demo</strong>
               </div>
             </div>
+            <div class="chat" id="chat"></div>
           </div>
-        </div>
+        </section>
       </section>
 
-      <section class="capability-band">
-        <article>
-          <span>01</span>
-          <h2>从问题到计划</h2>
-          <p>把自然语言问题约束为可执行的查询结构，降低 SQL 暴露成本。</p>
-        </article>
-        <article>
-          <span>02</span>
-          <h2>从数据到结论</h2>
-          <p>对结果做业务总结，不让最终输出停留在原始字段和明细列表。</p>
-        </article>
-        <article>
-          <span>03</span>
-          <h2>从接口到展示</h2>
-          <p>同一个前端同时承接项目阐述、系统状态和现场演示，适合作品集展示。</p>
-        </article>
-      </section>
-
-      <section class="architecture-section" id="architecture">
-        <div class="section-heading">
-          <span>System Flow</span>
-          <h2>从输入到结果的处理链路</h2>
-        </div>
-
-        <div class="architecture-rail">
-          <article class="flow-card">
-            <strong>01</strong>
-            <h3>Question Intake</h3>
-            <p>接收自然语言问题、会话 ID 与历史上下文。</p>
-          </article>
-          <article class="flow-card">
-            <strong>02</strong>
-            <h3>Intent Analysis</h3>
-            <p>LLM 生成结构化查询计划与图表配置建议。</p>
-          </article>
-          <article class="flow-card">
-            <strong>03</strong>
-            <h3>MySQL Query</h3>
-            <p>安全构造 SQL，限定表字段与参数化执行。</p>
-          </article>
-          <article class="flow-card">
-            <strong>04</strong>
-            <h3>Result Formatting</h3>
-            <p>总结查询结果，必要时补充图表并回传前端。</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="showcase-grid">
-        <article class="showcase-panel metric-panel" id="test-panel">
-          <div class="section-heading compact">
-            <span>Reliability</span>
-            <h2>工程化补强</h2>
-          </div>
-          <div class="metric-list">
+      <section class="lower-grid">
+        <section class="surface-card" id="scope">
+          <div class="card-toolbar">
             <div>
-              <span>健康检查</span>
-              <strong id="healthStatusBadge">等待响应</strong>
-            </div>
-            <div>
-              <span>自动化测试</span>
-              <strong>LLM / SQL / Session / API</strong>
-            </div>
-            <div>
-              <span>初始化支持</span>
-              <strong>`scripts/init_mysql.sql`</strong>
-            </div>
-            <div>
-              <span>LLM 容错</span>
-              <strong>严格 JSON 解析与错误提示</strong>
+              <p class="overline">Scope</p>
+              <h2>当前可分析的数据</h2>
             </div>
           </div>
-        </article>
+          <div class="scope-grid" id="tableGrid"></div>
+        </section>
 
-        <article class="showcase-panel" id="data-model">
-          <div class="section-heading compact">
-            <span>Schema View</span>
-            <h2>数据模型视图</h2>
+        <section class="surface-card status-card">
+          <div class="card-toolbar">
+            <div>
+              <p class="overline">Status</p>
+              <h2>平台可用性</h2>
+            </div>
+            <span class="status-dot" id="statusDot"></span>
           </div>
-          <div class="schema-grid" id="tableGrid"></div>
-        </article>
+          <dl class="status-list">
+            <div><dt>问数服务</dt><dd id="serviceDetail">等待响应</dd></div>
+            <div><dt>数据连接</dt><dd id="databaseDetail">等待响应</dd></div>
+            <div><dt>智能分析</dt><dd id="llmDetail">等待响应</dd></div>
+          </dl>
+        </section>
       </section>
 
-      <section class="examples-section">
-        <div class="section-heading">
-          <span>Prompt Library</span>
-          <h2>适合演示的典型问题</h2>
-        </div>
-        <div class="examples-grid" id="examples"></div>
-      </section>
-
-      <section class="demo-section" id="live-demo">
-        <div class="section-heading">
-          <span>Live Demo</span>
-          <h2>在线问数演示台</h2>
-        </div>
-
-        <div class="demo-layout">
-          <aside class="demo-sidebar">
-            <div class="demo-sidebar-block">
-              <h3>系统状态</h3>
-              <div class="status-card">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">正在检查服务</span>
-              </div>
-              <dl class="status-detail-list">
-                <div>
-                  <dt>服务</dt>
-                  <dd id="serviceDetail">等待响应</dd>
-                </div>
-                <div>
-                  <dt>数据库</dt>
-                  <dd id="databaseDetail">等待响应</dd>
-                </div>
-                <div>
-                  <dt>LLM</dt>
-                  <dd id="llmDetail">等待响应</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div class="demo-sidebar-block">
-              <h3>演示提示</h3>
-              <ul class="hint-list">
-                <li>适合展示 GMV、销量、金额排名、类目对比等问题。</li>
-                <li>支持会话上下文，适合连续追问。</li>
-                <li>当问题具备可视化价值时，会返回图表。</li>
-              </ul>
-            </div>
-          </aside>
-
-          <div class="demo-stage">
-            <div class="conversation-shell">
-              <div class="conversation-toolbar">
-                <div class="toolbar-title">
-                  <strong>AIQuery Live</strong>
-                  <span>现场问数交互区</span>
-                </div>
-                <button class="toolbar-button" type="button" id="clearChatBtn">
-                  <span class="button-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M3 6h18"></path>
-                      <path d="M8 6V4h8v2"></path>
-                      <path d="m19 6-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                    </svg>
-                  </span>
-                  <span>清空会话</span>
-                </button>
-              </div>
-
-              <div class="chat" id="chat">
-                <div class="welcome" id="welcome">
-                  <div class="welcome-badge">作品演示模式</div>
-                  <h3>现在就向 AIQuery 提一个业务问题</h3>
-                  <p>例如：本月订单 GMV 是多少？哪些省份销售额最高？各类目商品销量对比图。</p>
-                </div>
-              </div>
-
-              <form class="composer" id="composer">
-                <label class="sr-only" for="questionInput">输入业务问题</label>
-                <textarea
-                  id="questionInput"
-                  rows="1"
-                  maxlength="2000"
-                  placeholder="输入你的业务问题，按 Enter 发送，Shift + Enter 换行"
-                ></textarea>
-                <button type="submit" id="sendBtn" class="solid-button icon-only" aria-label="发送问题">
-                  <span class="button-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M22 2 11 13"></path>
-                      <path d="m22 2-7 20-4-9-9-4Z"></path>
-                    </svg>
-                  </span>
-                </button>
-              </form>
-            </div>
+      <section class="surface-card process-card" id="progress">
+        <div class="card-toolbar">
+          <div>
+            <p class="overline">Process</p>
+            <h2>一次问数会经历什么</h2>
           </div>
+        </div>
+        <div class="process-steps">
+          <article><span>01</span><h3>理解问题</h3><p>确认要看的业务指标、时间范围和排序方式。</p><em>自动完成</em></article>
+          <article><span>02</span><h3>匹配数据</h3><p>从订单、商品、用户等业务数据中选择分析范围。</p><em>自动完成</em></article>
+          <article><span>03</span><h3>计算结果</h3><p>完成汇总、排名、对比和趋势计算。</p><em>自动完成</em></article>
+          <article><span>04</span><h3>生成结论</h3><p>输出可读结论，并生成适合汇报的图表。</p><em>自动完成</em></article>
         </div>
       </section>
     </main>
   </div>
 
-  <script src="/assets/app.js"></script>
+  <script src="/assets/app.js?v=business-console-2"></script>
 </body>
 </html>

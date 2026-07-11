@@ -1,9 +1,8 @@
 const API_BASE = window.location.origin;
 const SESSION_KEY = "aiquery_session_id";
 
-const appState = {
+const state = {
   loading: false,
-  health: null,
 };
 
 const chat = document.getElementById("chat");
@@ -12,17 +11,49 @@ const composer = document.getElementById("composer");
 const questionInput = document.getElementById("questionInput");
 const sendBtn = document.getElementById("sendBtn");
 const clearChatBtn = document.getElementById("clearChatBtn");
+const examplesEl = document.getElementById("examples");
+const tableGridEl = document.getElementById("tableGrid");
+const runBadge = document.getElementById("runBadge");
 const statusDot = document.getElementById("statusDot");
-const statusText = document.getElementById("statusText");
+const servicePill = document.getElementById("servicePill");
+const databasePill = document.getElementById("databasePill");
+const llmPill = document.getElementById("llmPill");
 const serviceDetail = document.getElementById("serviceDetail");
 const databaseDetail = document.getElementById("databaseDetail");
 const llmDetail = document.getElementById("llmDetail");
-const heroServiceState = document.getElementById("heroServiceState");
-const heroDataState = document.getElementById("heroDataState");
-const heroHealthSummary = document.getElementById("heroHealthSummary");
-const healthStatusBadge = document.getElementById("healthStatusBadge");
-const examplesEl = document.getElementById("examples");
-const tableGridEl = document.getElementById("tableGrid");
+const viewButtons = document.querySelectorAll(".view-switch button");
+const visualPanels = document.querySelectorAll(".visual-panel");
+
+const businessNames = {
+  product: "商品信息",
+  category: "商品分类",
+  user: "用户信息",
+  orders: "订单记录",
+  order_item: "订单明细",
+  purchase_record: "采购记录",
+  chat_record: "对话记录",
+  query_example: "示例问题",
+};
+
+const businessMeta = {
+  product: { icon: "商", desc: "商品名称、价格、库存等基础信息" },
+  category: { icon: "类", desc: "商品分类、类目层级和归属关系" },
+  user: { icon: "客", desc: "用户基础资料和增长情况" },
+  orders: { icon: "单", desc: "订单金额、时间、地区和状态" },
+  order_item: { icon: "明", desc: "订单中的商品明细和数量" },
+  purchase_record: { icon: "采", desc: "采购金额、供应和入库记录" },
+  chat_record: { icon: "问", desc: "历史问数记录和上下文" },
+  query_example: { icon: "例", desc: "常用业务问题模板" },
+};
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function getSessionId() {
   let id = localStorage.getItem(SESSION_KEY);
@@ -33,265 +64,189 @@ function getSessionId() {
   return id;
 }
 
-function resetSession() {
-  localStorage.removeItem(SESSION_KEY);
-}
-
 function setLoading(value) {
-  appState.loading = value;
-  sendBtn.disabled = value;
+  state.loading = value;
   questionInput.disabled = value;
-}
-
-function hideWelcome() {
-  if (welcome) {
-    welcome.style.display = "none";
-  }
-}
-
-function showWelcome() {
-  if (welcome) {
-    welcome.style.display = "";
-  }
+  sendBtn.disabled = value;
+  sendBtn.innerHTML = value ? "<span>分析中</span><b>…</b>" : "<span>开始分析</span><b>↗</b>";
+  runBadge.textContent = value ? "正在分析" : "等待提问";
 }
 
 function scrollToBottom() {
   chat.scrollTop = chat.scrollHeight;
 }
 
-function formatRelativeStatus(data) {
-  if (!data) {
-    return "等待状态";
-  }
-  if (data.status === "ok") {
-    return "已就绪";
-  }
-  if (data.status === "warning") {
-    return "需检查";
-  }
-  return "不可用";
+function setPill(element, text, type) {
+  element.textContent = text;
+  element.className = `pill ${type}`;
 }
 
-function setHealthPill(el, label, type) {
-  el.textContent = label;
-  el.classList.remove("muted", "is-warning", "is-danger");
-  if (type === "warning") {
-    el.classList.add("is-warning");
-  } else if (type === "danger") {
-    el.classList.add("is-danger");
-  } else if (type === "muted") {
-    el.classList.add("muted");
-  }
+function getStatusLabel(payload) {
+  if (!payload) return "未知";
+  if (payload.status === "ok") return "正常";
+  if (payload.status === "warning") return "需检查";
+  return "异常";
+}
+
+function simplifyBackendMessage(message, fallback) {
+  if (!message) return fallback;
+  if (message.includes("API") || message.includes("FastAPI")) return "服务已可用";
+  if (message.includes("LLM") || message.includes("API Key")) return "智能分析已就绪";
+  if (message.includes("数据库") || message.includes("表")) return "数据连接正常";
+  return fallback;
 }
 
 function renderExamples(examples) {
-  examplesEl.innerHTML = "";
+  const fallback = [
+    "各省份订单金额排名，并生成图表",
+    "本月订单 GMV 是多少？",
+    "各类目商品销量对比",
+    "新增用户趋势如何？",
+  ];
+  const list = examples.length ? examples : fallback;
 
-  if (!examples.length) {
-    const empty = document.createElement("div");
-    empty.className = "empty-grid-note";
-    empty.textContent = "暂时没有示例问题，启动后端并检查 query_example 表即可加载。";
-    examplesEl.appendChild(empty);
-    return;
-  }
+  examplesEl.innerHTML = `
+    <div class="prompt-title">推荐问题</div>
+    <div class="prompt-list">
+      ${list.slice(0, 6).map((item) => `
+        <button type="button" title="${escapeHtml(item)}">
+          <span>${escapeHtml(item)}</span>
+          <b>运行</b>
+        </button>
+      `).join("")}
+    </div>
+  `;
 
-  examples.forEach((text, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "example-card";
-    button.innerHTML = `
-      <div>
-        <div class="table-meta">Demo Prompt ${String(index + 1).padStart(2, "0")}</div>
-        <h3>${text}</h3>
-      </div>
-      <div class="example-card-footer">
-        <span>直接运行</span>
-        <span aria-hidden="true">→</span>
-      </div>
-    `;
+  examplesEl.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
-      questionInput.value = text;
+      questionInput.value = button.textContent;
       questionInput.focus();
-      submitQuestion();
     });
-    examplesEl.appendChild(button);
   });
 }
 
 function renderTables(tables) {
-  tableGridEl.innerHTML = "";
-
   if (!tables.length) {
-    const empty = document.createElement("div");
-    empty.className = "empty-grid-note";
-    empty.textContent = "未能加载数据表信息，请检查 /tables 接口和数据库连接。";
-    tableGridEl.appendChild(empty);
+    tableGridEl.innerHTML = '<p class="empty-note">暂时没有加载到可分析数据。</p>';
     return;
   }
 
-  tables.forEach(({ label, name }) => {
-    const card = document.createElement("article");
-    card.className = "table-card";
-    card.innerHTML = `
-      <div class="table-card-header">
+  tableGridEl.innerHTML = tables.map(({ label, name }, index) => {
+    const displayName = businessNames[name] || label;
+    const meta = businessMeta[name] || { icon: "▦", desc: "可用于业务分析" };
+    return `
+      <article class="scope-card">
+        <span class="scope-icon">${meta.icon}</span>
         <div>
-          <div class="table-meta">Logical Table</div>
-          <strong>${label}</strong>
+          <strong>${escapeHtml(displayName)}</strong>
+          <small>${escapeHtml(meta.desc)}</small>
         </div>
-        <span class="table-token">${name}</span>
-      </div>
+      </article>
     `;
-    tableGridEl.appendChild(card);
-  });
+  }).join("");
 }
 
-function createMessage(role, content, chartUrl, metaText = "") {
-  hideWelcome();
-
-  const message = document.createElement("article");
-  message.className = `message ${role}`;
-
-  const roleLabel = role === "user" ? "你" : "AI";
-  const chartMarkup = chartUrl
-    ? `
-      <div class="message-chart">
-        <img src="${chartUrl.startsWith("http") ? chartUrl : `${API_BASE}${chartUrl}`}" alt="查询结果图表" loading="lazy" />
-      </div>
-    `
+function appendMessage(role, content, options = {}) {
+  welcome.hidden = true;
+  document.querySelector(".visual-tabs")?.setAttribute("hidden", "");
+  const article = document.createElement("article");
+  article.className = `message ${role}`;
+  const title = role === "user" ? "业务问题" : "分析结果";
+  const chart = options.chartUrl
+    ? `<figure class="chart-frame"><img src="${options.chartUrl.startsWith("http") ? options.chartUrl : `${API_BASE}${options.chartUrl}`}" alt="分析结果图表" /></figure>`
     : "";
 
-  const metaMarkup = metaText ? `<div class="message-meta">${metaText}</div>` : "";
-
-  message.innerHTML = `
-    <div class="message-head">
-      <span class="message-role">${roleLabel}</span>
-      ${metaMarkup}
-    </div>
-    <div class="message-body">${content}</div>
-    ${chartMarkup}
+  article.innerHTML = `
+    <header>
+      <strong>${title}</strong>
+      <span>${escapeHtml(options.meta || "")}</span>
+    </header>
+    <div class="message-body">${escapeHtml(content)}</div>
+    ${chart}
   `;
-
-  chat.appendChild(message);
+  chat.appendChild(article);
   scrollToBottom();
+  return article;
 }
 
-function createLoadingMessage() {
-  hideWelcome();
-
-  const loading = document.createElement("article");
-  loading.className = "loading-message";
-  loading.id = "loadingMsg";
-  loading.innerHTML = `
-    <div class="message-head">
-      <span class="message-role">AI</span>
-      <div class="message-meta">正在执行查询链路</div>
-    </div>
-    <div class="message-body">
-      正在解析问题、规划查询并组织结果
-      <span class="loading-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+function appendProgress() {
+  welcome.hidden = true;
+  const article = document.createElement("article");
+  article.className = "message assistant progress";
+  article.innerHTML = `
+    <header><strong>处理进度</strong><span>实时</span></header>
+    <div class="progress-track">
+      <span>理解问题</span>
+      <span>匹配数据</span>
+      <span>计算结果</span>
+      <span>生成结论</span>
     </div>
   `;
-  chat.appendChild(loading);
+  chat.appendChild(article);
   scrollToBottom();
-  return loading;
+  return article;
 }
 
-function setStatusOffline(message = "服务不可用") {
-  statusDot.className = "status-dot offline";
-  statusText.textContent = message;
-  serviceDetail.textContent = "后端未响应";
-  databaseDetail.textContent = "无法获取数据库状态";
-  llmDetail.textContent = "无法获取模型状态";
-  setHealthPill(heroServiceState, "服务离线", "danger");
-  setHealthPill(heroDataState, "状态未知", "danger");
-  heroHealthSummary.textContent = "后端未连接";
-  healthStatusBadge.textContent = "离线";
+function setOffline() {
+  statusDot.className = "status-dot danger";
+  setPill(servicePill, "问数服务离线", "danger");
+  setPill(databasePill, "数据连接未知", "muted");
+  setPill(llmPill, "智能分析未知", "muted");
+  serviceDetail.textContent = "问数服务未响应";
+  databaseDetail.textContent = "暂时无法确认数据连接";
+  llmDetail.textContent = "暂时无法确认智能分析能力";
 }
 
-function updateHealthUI(payload) {
-  appState.health = payload;
-  const status = payload.status || "warning";
+function updateHealth(payload) {
+  const serviceOk = payload.service?.status === "ok";
+  const databaseOk = payload.database?.status === "ok";
+  const llmOk = payload.llm?.status === "ok";
+  const allOk = serviceOk && databaseOk && llmOk;
 
-  if (status === "ok") {
-    statusDot.className = "status-dot online";
-    statusText.textContent = "服务与依赖已就绪";
-  } else {
-    statusDot.className = "status-dot";
-    statusText.textContent = "服务在线，部分依赖待检查";
-  }
+  statusDot.className = `status-dot ${allOk ? "ok" : "warning"}`;
+  setPill(servicePill, serviceOk ? "问数服务正常" : "问数服务异常", serviceOk ? "ok" : "danger");
+  setPill(databasePill, `数据连接${getStatusLabel(payload.database)}`, databaseOk ? "ok" : "warning");
+  setPill(llmPill, `智能分析${getStatusLabel(payload.llm)}`, llmOk ? "ok" : "warning");
 
-  serviceDetail.textContent = payload.service?.status === "ok" ? "API 服务可访问" : "服务状态异常";
-  databaseDetail.textContent = payload.database?.message || "数据库状态未知";
-  llmDetail.textContent = payload.llm?.message || "LLM 状态未知";
-
-  setHealthPill(
-    heroServiceState,
-    payload.service?.status === "ok" ? "服务在线" : "服务异常",
-    payload.service?.status === "ok" ? "ok" : "danger"
-  );
-  setHealthPill(heroDataState, `数据库 ${formatRelativeStatus(payload.database)}`, payload.database?.status || "warning");
-
-  heroHealthSummary.textContent =
-    status === "ok" ? "服务、数据库、LLM 已全部就绪" : "服务可用，但仍有配置项需要关注";
-  healthStatusBadge.textContent = status === "ok" ? "全部通过" : "存在告警";
+  serviceDetail.textContent = serviceOk ? "服务已可用" : "服务状态异常";
+  databaseDetail.textContent = simplifyBackendMessage(payload.database?.message, databaseOk ? "数据连接正常" : "数据连接需检查");
+  llmDetail.textContent = simplifyBackendMessage(payload.llm?.message, llmOk ? "智能分析已就绪" : "智能分析需检查");
 }
 
 async function checkHealth() {
   try {
-    const res = await fetch(`${API_BASE}/health`);
-    if (!res.ok) {
-      throw new Error("health-check-failed");
-    }
-    const payload = await res.json();
-    updateHealthUI(payload);
+    const response = await fetch(`${API_BASE}/health`);
+    if (!response.ok) throw new Error("health failed");
+    updateHealth(await response.json());
   } catch {
-    setStatusOffline("无法连接后端服务");
+    setOffline();
   }
 }
 
 async function loadMeta() {
   try {
-    const [exampleRes, tableRes] = await Promise.all([
+    const [examplesResponse, tablesResponse] = await Promise.all([
       fetch(`${API_BASE}/examples`),
       fetch(`${API_BASE}/tables`),
     ]);
-
-    if (exampleRes.ok) {
-      const data = await exampleRes.json();
-      renderExamples(data.examples || []);
-    } else {
-      renderExamples([]);
-    }
-
-    if (tableRes.ok) {
-      const data = await tableRes.json();
-      renderTables(data.tables || []);
-    } else {
-      renderTables([]);
-    }
+    const examples = examplesResponse.ok ? (await examplesResponse.json()).examples || [] : [];
+    const tables = tablesResponse.ok ? (await tablesResponse.json()).tables || [] : [];
+    renderExamples(examples);
+    renderTables(tables);
   } catch {
-    renderExamples([
-      "本月订单 GMV 是多少？",
-      "各省份订单金额排名",
-      "查询所有商品名称和价格",
-      "各类目销量对比图",
-    ]);
+    renderExamples([]);
     renderTables([]);
   }
 }
 
 async function submitQuestion() {
   const question = questionInput.value.trim();
-  if (!question || appState.loading) {
-    return;
-  }
+  if (!question || state.loading) return;
 
-  createMessage("user", question, null, "已发送到 AIQuery");
+  appendMessage("user", question, { meta: "已提交" });
   questionInput.value = "";
-  questionInput.style.height = "auto";
   setLoading(true);
-
-  const loadingMessage = createLoadingMessage();
+  const progress = appendProgress();
 
   try {
     const response = await fetch(`${API_BASE}/run`, {
@@ -303,28 +258,23 @@ async function submitQuestion() {
       }),
     });
 
-    loadingMessage.remove();
-
+    progress.remove();
     if (!response.ok) {
-      const errorPayload = await response.json().catch(() => ({}));
-      const detail = errorPayload.detail || `请求失败（${response.status}）`;
-      createMessage("assistant", typeof detail === "string" ? detail : JSON.stringify(detail), null, "返回错误");
-      chat.lastElementChild?.classList.add("error");
+      appendMessage("assistant", "本次分析没有成功，请稍后重试或换一个更明确的问题。", { meta: "分析失败" }).classList.add("error");
+      runBadge.textContent = "分析失败";
       return;
     }
 
     const data = await response.json();
-    const meta = data.chart_url ? "已返回文本结果与图表" : "已返回文本结果";
-    createMessage("assistant", data.final_answer || "没有拿到有效回答。", data.chart_url, meta);
+    appendMessage("assistant", data.final_answer || "暂未得到有效结论。", {
+      chartUrl: data.chart_url,
+      meta: data.chart_url ? "已生成图表" : "已生成结论",
+    });
+    runBadge.textContent = data.chart_url ? "已生成图表" : "已生成结论";
   } catch {
-    loadingMessage.remove();
-    createMessage(
-      "assistant",
-      "无法连接后端服务，请确认已经运行 `python run.py --server`，并检查健康检查接口是否可访问。",
-      null,
-      "连接失败"
-    );
-    chat.lastElementChild?.classList.add("error");
+    progress.remove();
+    appendMessage("assistant", "当前无法完成分析，请确认本地服务正在运行。", { meta: "连接失败" }).classList.add("error");
+    runBadge.textContent = "连接失败";
   } finally {
     setLoading(false);
     questionInput.focus();
@@ -332,10 +282,32 @@ async function submitQuestion() {
 }
 
 function clearConversation() {
-  chat.querySelectorAll(".message, .loading-message").forEach((node) => node.remove());
-  resetSession();
-  showWelcome();
+  chat.innerHTML = "";
+  welcome.hidden = false;
+  document.querySelector(".visual-tabs")?.removeAttribute("hidden");
+  runBadge.textContent = "等待提问";
+  localStorage.removeItem(SESSION_KEY);
   questionInput.focus();
+}
+
+function bindSpotlightCards() {
+  document.querySelectorAll(".surface-card").forEach((card) => {
+    card.addEventListener("pointermove", (event) => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+      card.style.setProperty("--my", `${event.clientY - rect.top}px`);
+    });
+  });
+}
+
+function bindViewSwitch() {
+  viewButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const view = button.dataset.view;
+      viewButtons.forEach((item) => item.classList.toggle("active", item === button));
+      visualPanels.forEach((panel) => panel.classList.toggle("active", panel.dataset.panel === view));
+    });
+  });
 }
 
 composer.addEventListener("submit", (event) => {
@@ -350,13 +322,10 @@ questionInput.addEventListener("keydown", (event) => {
   }
 });
 
-questionInput.addEventListener("input", () => {
-  questionInput.style.height = "auto";
-  questionInput.style.height = `${Math.min(questionInput.scrollHeight, 180)}px`;
-});
-
 clearChatBtn.addEventListener("click", clearConversation);
 
+bindSpotlightCards();
+bindViewSwitch();
 loadMeta();
 checkHealth();
 setInterval(checkHealth, 30000);
