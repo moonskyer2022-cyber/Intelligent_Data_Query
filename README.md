@@ -65,6 +65,20 @@ flowchart LR
 
 ## 快速开始
 
+### Docker Compose Demo
+
+需要 Docker Desktop：
+
+```powershell
+docker compose up --build
+```
+
+访问 <http://127.0.0.1:8000>。停止并删除 Demo 数据卷：
+
+```powershell
+docker compose down -v
+```
+
 ### 1. 前置条件
 
 - Python 3.12+
@@ -138,6 +152,7 @@ powershell -ExecutionPolicy Bypass -File scripts/demo.ps1 -Install -DemoMode -Op
 | --- | --- | --- |
 | `/` | GET | 返回 Web 工作台页面。 |
 | `/health` | GET | 检查服务、MySQL 和 LLM 配置状态。 |
+| `/metrics` | GET | 返回进程级请求量、错误数和延迟统计。 |
 | `/examples` | GET | 返回数据库中的示例问题。 |
 | `/demo-scenarios` | GET | 返回固定 Demo 场景、说明和预期结果。 |
 | `/tables` | GET | 返回当前可用的数据表和字段信息。 |

@@ -1,0 +1,39 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ai_query
+      MYSQL_ROOT_PASSWORD: root-demo-password
+      MYSQL_USER: aiquery_readonly
+      MYSQL_PASSWORD: readonly-demo-password
+    ports:
+      - "3306:3306"
+    volumes:
+      - aiquery_mysql:/var/lib/mysql
+      - ./scripts/init_mysql.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot-demo-password"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: aiquery_readonly
+      DB_PASSWORD: readonly-demo-password
+      DB_NAME: ai_query
+      DEMO_MODE: "true"
+      APP_ENV: demo
+      CORS_ORIGINS: http://127.0.0.1:8000,http://localhost:8000
+      SESSION_BACKEND: mysql
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  aiquery_mysql:

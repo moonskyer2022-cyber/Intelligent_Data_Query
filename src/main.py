@@ -21,6 +21,7 @@ from storage.db_meta import check_database_health, load_examples, list_tables_fo
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 logger = logging.getLogger("intelligent_data_query")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+metrics = {"request_count": 0, "error_count": 0, "total_latency_ms": 0}
 
 app = FastAPI(title="智能问数（Intelligent Data Query）", description="本地智能问数 API")
 
@@ -55,6 +56,10 @@ async def request_context(request: Request, call_next):
         logger.exception("request failed request_id=%s path=%s", request_id, request.url.path)
         raise
     elapsed_ms = round((time.perf_counter() - started) * 1000)
+    metrics["request_count"] += 1
+    metrics["total_latency_ms"] += elapsed_ms
+    if response.status_code >= 400:
+        metrics["error_count"] += 1
     response.headers["X-Request-ID"] = request_id
     logger.info(
         "request_id=%s method=%s path=%s status=%s elapsed_ms=%s",
@@ -165,6 +170,15 @@ async def health():
         "database": database,
         "llm": llm,
         "security": {"api_key_enabled": bool(API_KEY), "auth_enabled": AUTH_ENABLED, "least_privilege_db_user": DB_USER.lower() not in {"root", ""}},
+    }
+
+
+@app.get("/metrics")
+async def metrics_endpoint():
+    request_count = metrics["request_count"]
+    return {
+        **metrics,
+        "average_latency_ms": round(metrics["total_latency_ms"] / request_count, 2) if request_count else 0,
     }
 
 

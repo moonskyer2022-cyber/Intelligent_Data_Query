@@ -67,9 +67,21 @@ def main() -> int:
                         component VARCHAR(80) PRIMARY KEY,
                         version INT NOT NULL,
                         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-                    """
-                )
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS aiquery_session_messages (
+                    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                    session_id VARCHAR(80) NOT NULL,
+                    role VARCHAR(20) NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    KEY idx_aiquery_session (session_id, id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """
+            )
 
         tables = inspect_schema(conn)
         missing_tables = sorted(set(REQUIRED_COLUMNS) - set(tables))

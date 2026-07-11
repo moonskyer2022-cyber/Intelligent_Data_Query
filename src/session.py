@@ -1,7 +1,9 @@
 import time
 from typing import Optional
 
-from settings import MAX_SESSIONS, SESSION_TTL_SECONDS
+import pymysql
+
+from settings import DB_CONNECT_TIMEOUT, DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_READ_TIMEOUT, DB_USER, DB_WRITE_TIMEOUT, MAX_SESSIONS, SESSION_BACKEND, SESSION_TTL_SECONDS
 
 MAX_TURNS = 6
 
@@ -10,6 +12,19 @@ class SessionStore:
     def __init__(self):
         self._sessions: dict[str, list[dict[str, str]]] = {}
         self._last_access: dict[str, float] = {}
+
+    def _connect(self):
+        return pymysql.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME,
+            charset="utf8mb4",
+            connect_timeout=DB_CONNECT_TIMEOUT,
+            read_timeout=DB_READ_TIMEOUT,
+            write_timeout=DB_WRITE_TIMEOUT,
+        )
 
     def _expire(self) -> None:
         cutoff = time.time() - SESSION_TTL_SECONDS
@@ -24,6 +39,15 @@ class SessionStore:
                 self._last_access.pop(session_id, None)
 
     def get_history(self, session_id: Optional[str]) -> list[dict[str, str]]:
+        if SESSION_BACKEND == "mysql" and session_id:
+            with self._connect() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT role, content FROM aiquery_session_messages WHERE session_id=%s ORDER BY id DESC LIMIT %s",
+                        (session_id, MAX_TURNS * 2),
+                    )
+                    rows = list(reversed(cur.fetchall()))
+            return [{"role": row[0], "content": row[1]} for row in rows]
         self._expire()
         if not session_id:
             return []
@@ -40,6 +64,15 @@ class SessionStore:
         return "\n".join(f"{m['role']}: {m['content']}" for m in history)
 
     def add_turn(self, session_id: Optional[str], question: str, answer: str) -> None:
+        if SESSION_BACKEND == "mysql" and session_id:
+            with self._connect() as conn:
+                with conn.cursor() as cur:
+                    cur.executemany(
+                        "INSERT INTO aiquery_session_messages (session_id, role, content) VALUES (%s, %s, %s)",
+                        [(session_id, "user", question), (session_id, "assistant", answer)],
+                    )
+                conn.commit()
+            return
         self._expire()
         if not session_id:
             return

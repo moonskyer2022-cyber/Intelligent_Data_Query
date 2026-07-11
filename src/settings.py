@@ -35,6 +35,7 @@ PORT = int(os.getenv("PORT", "8000"))
 APP_ENV = os.getenv("APP_ENV", "demo").lower()
 SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", "3600"))
 MAX_SESSIONS = int(os.getenv("MAX_SESSIONS", "1000"))
+SESSION_BACKEND = os.getenv("SESSION_BACKEND", "memory").lower()
 QUERY_MAX_ROWS = int(os.getenv("QUERY_MAX_ROWS", "500"))
 SENSITIVE_FIELDS = {item.strip().lower() for item in os.getenv("SENSITIVE_FIELDS", "password,phone,email,id_card,token").split(",") if item.strip()}
 LLM_MAX_RESPONSE_CHARS = int(os.getenv("LLM_MAX_RESPONSE_CHARS", "20000"))

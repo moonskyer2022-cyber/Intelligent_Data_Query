@@ -163,5 +163,14 @@ class RunEndpointTests(unittest.TestCase):
         self.assertTrue(body["request_id"])
 
 
+class MetricsTests(unittest.TestCase):
+    def test_metrics_endpoint_returns_process_counters(self):
+        response = TestClient(main.app).get("/metrics")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("request_count", response.json())
+        self.assertIn("average_latency_ms", response.json())
+
+
 if __name__ == "__main__":
     unittest.main()
