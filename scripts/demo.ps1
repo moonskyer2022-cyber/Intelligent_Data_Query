@@ -52,6 +52,9 @@ if (-not (Test-NetConnection -ComputerName $dbHost -Port $dbPort -InformationLev
 }
 
 Write-Host "MySQL $dbHost`:$dbPort 可连接。" -ForegroundColor Green
+Write-Host "检查 Demo 数据库契约..." -ForegroundColor Yellow
+& $python (Join-Path $root "scripts\migrate_demo_schema.py")
+if ($LASTEXITCODE -ne 0) { throw "数据库 schema 检查失败，请先修复数据库结构。" }
 Write-Host "访问地址：http://127.0.0.1:8000" -ForegroundColor Green
 Write-Host "健康检查：http://127.0.0.1:8000/health" -ForegroundColor Green
 

@@ -6,7 +6,7 @@ from jinja2 import Template
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
-from settings import CONFIG_DIR, DEMO_MODE, LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_TIMEOUT_SECONDS
+from settings import CONFIG_DIR, DEMO_MODE, LLM_API_KEY, LLM_BASE_URL, LLM_MAX_RESPONSE_CHARS, LLM_MODEL, LLM_TIMEOUT_SECONDS
 from storage.db_meta import load_columns
 
 
@@ -122,6 +122,8 @@ def extract_text(content: Any) -> str:
 
 def parse_json_response(text: str) -> dict[str, Any]:
     cleaned = text.strip()
+    if len(cleaned) > LLM_MAX_RESPONSE_CHARS:
+        raise ValueError(f"LLM 响应超过 {LLM_MAX_RESPONSE_CHARS} 字符限制")
     fence_match = re.search(r"```(?:json)?\s*(.*?)\s*```", cleaned, flags=re.DOTALL | re.IGNORECASE)
     if fence_match:
         cleaned = fence_match.group(1).strip()

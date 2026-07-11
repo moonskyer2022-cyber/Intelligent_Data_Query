@@ -1,4 +1,5 @@
 import os
+import time
 import uuid
 from typing import Any, Optional
 
@@ -8,7 +9,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import font_manager as fm
 
-from settings import CHART_OUTPUT_DIR
+from settings import CHART_MAX_FILES, CHART_OUTPUT_DIR, CHART_RETENTION_SECONDS
 
 _CHINESE_FONT = None
 _CHART_KEYWORDS = (
@@ -74,6 +75,18 @@ def _extract_data(data: list[dict[str, Any]], x_field: str, y_field: str):
         labels.append(str(fields.get(x_field, "")))
         values.append(y_val)
     return labels, values
+
+
+def _cleanup_old_charts() -> None:
+    CHART_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    now = time.time()
+    files = sorted(CHART_OUTPUT_DIR.glob("chart_*.png"), key=lambda path: path.stat().st_mtime)
+    for path in files:
+        if now - path.stat().st_mtime > CHART_RETENTION_SECONDS:
+            path.unlink(missing_ok=True)
+    remaining = sorted(CHART_OUTPUT_DIR.glob("chart_*.png"), key=lambda path: path.stat().st_mtime)
+    for path in remaining[:-CHART_MAX_FILES]:
+        path.unlink(missing_ok=True)
 
 
 def should_generate_chart(user_question: str) -> bool:
@@ -207,6 +220,7 @@ def generate_chart(
 
     plt.tight_layout()
     CHART_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    _cleanup_old_charts()
     filename = f"chart_{uuid.uuid4().hex[:8]}.png"
     filepath = CHART_OUTPUT_DIR / filename
     fig.savefig(filepath, format="png", dpi=150, bbox_inches="tight", facecolor="white")

@@ -2,6 +2,7 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from settings import QUERY_MAX_ROWS
 from storage.db_meta import TABLE_ORDERS, TABLE_PRODUCT, check_field, load_columns, sql_table
 
 ALLOWED_FUNCS = {"sum", "count", "avg", "max", "min"}
@@ -77,6 +78,8 @@ class QueryPlan(BaseModel):
 
     @model_validator(mode="after")
     def validate_plan(self) -> "QueryPlan":
+        if self.page_size > QUERY_MAX_ROWS:
+            raise ValueError(f"单次查询最多返回 {QUERY_MAX_ROWS} 行")
         columns = load_columns()
         if self.query_type == "single":
             sql_t = sql_table(self.table_name)

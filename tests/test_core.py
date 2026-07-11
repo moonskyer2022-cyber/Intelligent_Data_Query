@@ -32,6 +32,11 @@ class LLMJsonParsingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "有效 JSON"):
             parse_json_response("not-json")
 
+    def test_parse_json_response_rejects_oversized_output(self):
+        with patch.object(llm_client, "LLM_MAX_RESPONSE_CHARS", 10):
+            with self.assertRaisesRegex(ValueError, "字符限制"):
+                parse_json_response('{"query_type":"single"}')
+
 
 class SessionStoreTests(unittest.TestCase):
     def test_format_messages_uses_passed_history(self):
@@ -81,6 +86,18 @@ class HealthEndpointTests(unittest.TestCase):
         self.assertEqual(body["database"]["status"], "ok")
         self.assertEqual(body["llm"]["status"], "warning")
 
+    def test_health_reports_demo_mode_as_available(self):
+        with patch.object(main, "DEMO_MODE", True), patch.object(
+            main,
+            "check_database_health",
+            return_value={"status": "ok", "message": "db ok"},
+        ):
+            response = TestClient(main.app).get("/health")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "ok")
+        self.assertEqual(response.json()["llm"]["status"], "demo")
+
 
 class DemoModeTests(unittest.TestCase):
     def test_demo_mode_returns_deterministic_intent(self):
@@ -109,6 +126,15 @@ class ApiKeyTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["detail"]["code"], "UNAUTHORIZED")
+
+    def test_bearer_token_endpoint_is_available_when_enabled(self):
+        with patch.object(main, "AUTH_ENABLED", True), patch.object(main, "AUTH_USERNAME", "demo"), patch.object(
+            main, "AUTH_PASSWORD", "secret"
+        ), patch.object(main, "AUTH_SECRET", "test-secret"):
+            response = TestClient(main.app).post("/auth/token", json={"username": "demo", "password": "secret"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["access_token"])
 
 
 class RunEndpointTests(unittest.TestCase):

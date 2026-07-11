@@ -96,6 +96,7 @@ function setPill(element, text, type) {
 function getStatusLabel(payload) {
   if (!payload) return "未知";
   if (payload.status === "ok") return "正常";
+  if (payload.status === "demo") return "演示模式";
   if (payload.status === "warning") return "需检查";
   return "异常";
 }
@@ -239,7 +240,7 @@ function setOffline() {
 function updateHealth(payload) {
   const serviceOk = payload.service?.status === "ok";
   const databaseOk = payload.database?.status === "ok";
-  const llmOk = payload.llm?.status === "ok";
+  const llmOk = ["ok", "demo"].includes(payload.llm?.status);
   const allOk = serviceOk && databaseOk && llmOk;
 
   statusDot.className = `status-dot ${allOk ? "ok" : "warning"}`;

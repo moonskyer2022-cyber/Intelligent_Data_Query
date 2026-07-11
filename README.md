@@ -100,10 +100,12 @@ REQUEST_TIMEOUT_SECONDS=45
 APP_ENV=demo
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_USER=root
+DB_USER=aiquery_readonly
 DB_PASSWORD=你的数据库密码
 DB_NAME=ai_query
 ```
+
+生产或内网试用环境建议使用 `aiquery_readonly` 账号，并先执行 [只读账号脚本](scripts/create_readonly_user.sql)。
 
 ### 4. 初始化 MySQL
 
@@ -177,6 +179,7 @@ python run.py -q "各省份订单金额排名，并生成图表"
 - SQL 由应用层根据结构化查询计划生成，不直接执行模型输出的 SQL 文本；
 - 数据库连接、LLM Key 和密码通过 `.env` 配置，不写入仓库；
 - 设置 `API_KEY` 后，`/run`、`/examples` 和 `/tables` 需要通过 `X-API-Key` 请求头访问；
+- 设置 `AUTH_ENABLED=true` 后，可通过 `POST /auth/token` 获取短期 Bearer Token；
 - 前端问题输入区提供可选 API Key，填写后会在当前浏览器会话中自动携带请求头；
 - SQL 执行层只接受应用生成的只读 `SELECT` 查询，并限制单次返回行数；
 - 服务健康检查会分别报告数据库与 LLM 配置状态；
@@ -201,6 +204,8 @@ python run.py -q "各省份订单金额排名，并生成图表"
 - `src/query/schema.py` 定义查询计划及字段校验规则；
 - `src/query/sql.py` 负责将结构化计划转换为 SQL；
 - `scripts/init_mysql.sql` 提供本地演示数据库的初始化脚本；
+- `scripts/migrate_demo_schema.py` 检查 Demo schema 契约，只执行非破坏性的兼容迁移；
+- Demo 启动脚本只执行只读 schema 检查；需要执行 `--apply` 时请使用管理员数据库账号单独运行迁移。
 - `src/demo.py` 定义固定 Demo 场景和预期展示目标；
 - `output/charts/` 仅保存运行时生成的图表文件。
 

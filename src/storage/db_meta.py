@@ -3,7 +3,7 @@ from functools import lru_cache
 import pymysql
 from pymysql.cursors import DictCursor
 
-from settings import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
+from settings import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER, SENSITIVE_FIELDS
 
 TABLES = {
     "商品表": "product",
@@ -81,6 +81,8 @@ def load_columns() -> dict[str, set[str]]:
 
 
 def check_field(table: str, field: str) -> None:
+    if field.lower() in SENSITIVE_FIELDS:
+        raise ValueError(f"字段 {field} 属于敏感字段，当前环境禁止查询")
     cols = load_columns().get(table, set())
     if field not in cols:
         raise ValueError(f"字段 {field} 不在表 {table} 中")
