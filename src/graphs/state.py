@@ -27,6 +27,9 @@ class GraphOutput(BaseModel):
     session_id: Optional[str] = None
     query_plan: Optional[dict[str, Any]] = None
     rows: list[dict[str, Any]] = Field(default_factory=list)
+    row_count: int = 0
     execution_ms: int = 0
     request_id: Optional[str] = None
     error_code: Optional[str] = None
+    mode: str = "llm"
+    data_source: str = "MySQL"

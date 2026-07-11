@@ -27,5 +27,6 @@ DB_CONNECT_TIMEOUT = int(os.getenv("DB_CONNECT_TIMEOUT", "3"))
 DB_READ_TIMEOUT = int(os.getenv("DB_READ_TIMEOUT", "20"))
 DB_WRITE_TIMEOUT = int(os.getenv("DB_WRITE_TIMEOUT", "20"))
 PORT = int(os.getenv("PORT", "8000"))
+APP_ENV = os.getenv("APP_ENV", "demo").lower()
 
 CHART_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

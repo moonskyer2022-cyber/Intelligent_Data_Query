@@ -10,8 +10,9 @@ from fastapi.staticfiles import StaticFiles
 
 from graphs.graph import main_graph
 from graphs.state import GraphInput, GraphOutput
+from demo import DEMO_SCENARIOS
 from session import session_store
-from settings import API_KEY, CHART_OUTPUT_DIR, CORS_ORIGINS, LLM_API_KEY, PORT, PROJECT_ROOT, REQUEST_TIMEOUT_SECONDS
+from settings import API_KEY, APP_ENV, CHART_OUTPUT_DIR, CORS_ORIGINS, DB_NAME, DEMO_MODE, LLM_API_KEY, PORT, PROJECT_ROOT, REQUEST_TIMEOUT_SECONDS
 from storage.db_meta import check_database_health, load_examples, list_tables_for_ui
 
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -70,6 +71,11 @@ async def examples():
     return {"examples": load_examples()}
 
 
+@app.get("/demo-scenarios")
+async def demo_scenarios():
+    return {"scenarios": DEMO_SCENARIOS}
+
+
 @app.get("/tables")
 async def tables():
     return {"tables": [{"label": a, "name": b} for a, b in list_tables_for_ui()]}
@@ -90,14 +96,18 @@ async def run_query(req: GraphInput, request: Request):
             ),
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
+        rows = result.get("rows", result.get("query_result", []))
         return GraphOutput(
             final_answer=result.get("final_answer", ""),
             chart_url=result.get("chart_url"),
             session_id=req.session_id,
             query_plan=result.get("query_plan"),
-            rows=result.get("rows", result.get("query_result", [])),
+            rows=rows,
+            row_count=len(rows),
             execution_ms=round((time.perf_counter() - started) * 1000),
             request_id=request_id,
+            mode="demo" if DEMO_MODE else "llm",
+            data_source=f"MySQL / {DB_NAME}",
         )
     except ValueError as e:
         logger.warning("query validation failed request_id=%s error=%s", request_id, e)
@@ -133,11 +143,12 @@ async def health():
 def start_server():
     import uvicorn
 
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=PORT,
-        reload=True,
-        reload_dirs=[str(PROJECT_ROOT / "src"), str(FRONTEND_DIR)],
-    )
+    options = {
+        "host": "0.0.0.0",
+        "port": PORT,
+        "reload": APP_ENV == "development",
+    }
+    if APP_ENV == "development":
+        options["reload_dirs"] = [str(PROJECT_ROOT / "src"), str(FRONTEND_DIR)]
+    uvicorn.run("main:app", **options)
 

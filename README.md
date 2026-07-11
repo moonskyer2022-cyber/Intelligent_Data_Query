@@ -97,6 +97,7 @@ DEMO_MODE=false
 API_KEY=
 CORS_ORIGINS=http://127.0.0.1:8000,http://localhost:8000
 REQUEST_TIMEOUT_SECONDS=45
+APP_ENV=demo
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
@@ -122,7 +123,7 @@ python run.py --server
 powershell -ExecutionPolicy Bypass -File scripts/demo.ps1 -Install -DemoMode -OpenBrowser
 ```
 
-脚本会创建缺失的 `.env`、检查 MySQL、启动服务并等待 `/health` 通过。`-DemoMode` 使用固定查询计划进行稳定演示；该模式仍需要可连接的 MySQL 和演示数据。
+脚本会创建缺失的 `.env`、检查 MySQL、启动服务并等待 `/health` 通过。`-DemoMode` 使用固定查询计划进行稳定演示；该模式仍需要可连接的 MySQL 和演示数据。`APP_ENV=development` 才会启用自动 reload，Demo/生产环境默认关闭。
 
 访问地址：
 
@@ -136,6 +137,7 @@ powershell -ExecutionPolicy Bypass -File scripts/demo.ps1 -Install -DemoMode -Op
 | `/` | GET | 返回 Web 工作台页面。 |
 | `/health` | GET | 检查服务、MySQL 和 LLM 配置状态。 |
 | `/examples` | GET | 返回数据库中的示例问题。 |
+| `/demo-scenarios` | GET | 返回固定 Demo 场景、说明和预期结果。 |
 | `/tables` | GET | 返回当前可用的数据表和字段信息。 |
 | `/run` | POST | 执行自然语言问数并返回结果。 |
 | `/static/charts/{filename}` | GET | 访问生成的图表文件。 |
@@ -199,6 +201,7 @@ python run.py -q "各省份订单金额排名，并生成图表"
 - `src/query/schema.py` 定义查询计划及字段校验规则；
 - `src/query/sql.py` 负责将结构化计划转换为 SQL；
 - `scripts/init_mysql.sql` 提供本地演示数据库的初始化脚本；
+- `src/demo.py` 定义固定 Demo 场景和预期展示目标；
 - `output/charts/` 仅保存运行时生成的图表文件。
 
 ## 项目结构

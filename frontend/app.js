@@ -108,21 +108,24 @@ function simplifyBackendMessage(message, fallback) {
   return fallback;
 }
 
-function renderExamples(examples) {
+function renderExamples(examples, scenarios = []) {
   const fallback = [
     "各省份订单金额排名，并生成图表",
     "本月订单 GMV 是多少？",
     "各类目商品销量对比",
     "新增用户趋势如何？",
   ];
-  const list = examples.length ? examples : fallback;
+  const list = scenarios.length
+    ? scenarios.map((item) => ({ question: item.question, description: item.description }))
+    : (examples.length ? examples.map((question) => ({ question, description: "数据库示例问题" })) : fallback.map((question) => ({ question, description: "推荐演示问题" })));
 
   examplesEl.innerHTML = `
     <div class="prompt-title">推荐问题</div>
     <div class="prompt-list">
       ${list.slice(0, 6).map((item) => `
-        <button type="button" title="${escapeHtml(item)}">
-          <span>${escapeHtml(item)}</span>
+        <button type="button" title="${escapeHtml(item.question)}">
+          <span>${escapeHtml(item.question)}</span>
+          <small>${escapeHtml(item.description)}</small>
           <b>运行</b>
         </button>
       `).join("")}
@@ -186,14 +189,23 @@ function appendMessage(role, content, options = {}) {
 function renderResultDetails(data) {
   const rows = Array.isArray(data.rows) ? data.rows.slice(0, 8) : [];
   const plan = data.query_plan ? escapeHtml(JSON.stringify(data.query_plan, null, 2)) : "暂无结构化查询计划";
+  const keys = rows.length ? Object.keys(rows[0].fields || rows[0]) : [];
+  const formatValue = (key, value) => {
+    if (typeof value !== "number") return escapeHtml(value);
+    const formatted = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(value);
+    return /amount|gmv|price|cost/i.test(key) ? `¥${formatted}` : formatted;
+  };
+  const headerHtml = keys.length ? `<div class="result-row result-header">${keys.map((key) => `<span>${escapeHtml(key)}</span>`).join("")}</div>` : "";
   const rowsHtml = rows.length
-    ? `<div class="result-rows">${rows.map((row) => {
+    ? `<div class="result-rows">${headerHtml}${rows.map((row) => {
         const fields = row.fields || row;
-        return `<div class="result-row">${Object.entries(fields).map(([key, value]) => `<span><b>${escapeHtml(key)}</b>${escapeHtml(value)}</span>`).join("")}</div>`;
+        return `<div class="result-row">${keys.map((key) => `<span>${formatValue(key, fields[key] ?? "-")}</span>`).join("")}</div>`;
       }).join("")}</div>`
     : "<p class=\"result-empty\">暂无结果明细</p>";
   const elapsed = Number.isFinite(data.execution_ms) ? ` · ${data.execution_ms} ms` : "";
-  return `<details class="result-details"><summary>查看查询过程与结果${elapsed}</summary><div class="result-details-body"><strong>结构化查询计划</strong><pre>${plan}</pre><strong>结果明细（最多展示 8 条）</strong>${rowsHtml}</div></details>`;
+  const total = Number.isFinite(data.row_count) ? `共 ${data.row_count} 条` : "结果明细";
+  const source = [data.mode ? `模式：${data.mode === "demo" ? "Demo" : "LLM"}` : "", data.data_source ? `来源：${data.data_source}` : ""].filter(Boolean).join(" · ");
+  return `<details class="result-details"><summary>查看查询过程与结果 · ${total}${elapsed}</summary><div class="result-details-body"><strong>${escapeHtml(source)}</strong><strong>结构化查询计划</strong><pre>${plan}</pre><strong>结果明细（最多展示 8 条）</strong>${rowsHtml}</div></details>`;
 }
 
 function appendProgress() {
@@ -252,13 +264,15 @@ async function checkHealth() {
 
 async function loadMeta() {
   try {
-    const [examplesResponse, tablesResponse] = await Promise.all([
+    const [examplesResponse, tablesResponse, scenariosResponse] = await Promise.all([
       fetch(`${API_BASE}/examples`, { headers: authHeaders() }),
       fetch(`${API_BASE}/tables`, { headers: authHeaders() }),
+      fetch(`${API_BASE}/demo-scenarios`, { headers: authHeaders() }),
     ]);
     const examples = examplesResponse.ok ? (await examplesResponse.json()).examples || [] : [];
     const tables = tablesResponse.ok ? (await tablesResponse.json()).tables || [] : [];
-    renderExamples(examples);
+    const scenarios = scenariosResponse.ok ? (await scenariosResponse.json()).scenarios || [] : [];
+    renderExamples(examples, scenarios);
     renderTables(tables);
   } catch {
     renderExamples([]);

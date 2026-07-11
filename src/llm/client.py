@@ -57,6 +57,20 @@ def run_demo_cfg(cfg_name: str, prompt_vars: dict[str, Any]) -> str:
                 },
                 ensure_ascii=False,
             )
+        if "类目" in question and "销量" in question:
+            return json.dumps(
+                {
+                    "query_type": "aggregate",
+                    "primary_table": "订单明细表",
+                    "join_tables": [{"table_name": "商品表", "join_type": "left"}],
+                    "group_by": ["category_name"],
+                    "aggregates": [{"field": "quantity", "func": "sum", "alias": "sales"}],
+                    "order_by": [{"field": "sales", "direction": "desc"}],
+                    "page_size": 100,
+                    "chart_config": {"chart_type": "bar", "x_field": "category_name", "y_field": "sales"},
+                },
+                ensure_ascii=False,
+            )
         if "省" in question or "地区" in question or "排名" in question:
             order_columns = load_columns().get("orders", set())
             dimension = "province" if "province" in order_columns else "region"

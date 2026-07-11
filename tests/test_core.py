@@ -95,6 +95,12 @@ class DemoModeTests(unittest.TestCase):
         self.assertEqual(payload["query_type"], "aggregate")
         self.assertEqual(payload["aggregates"][0]["alias"], "gmv")
 
+    def test_demo_scenarios_endpoint_exposes_fixed_cases(self):
+        response = TestClient(main.app).get("/demo-scenarios")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["scenarios"]), 4)
+
 
 class ApiKeyTests(unittest.TestCase):
     def test_protected_endpoint_requires_api_key_when_enabled(self):
