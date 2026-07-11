@@ -7,6 +7,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 from settings import CONFIG_DIR, DEMO_MODE, LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_TIMEOUT_SECONDS
+from storage.db_meta import load_columns
 
 
 def load_llm_cfg(name: str) -> dict[str, Any]:
@@ -57,15 +58,17 @@ def run_demo_cfg(cfg_name: str, prompt_vars: dict[str, Any]) -> str:
                 ensure_ascii=False,
             )
         if "省" in question or "地区" in question or "排名" in question:
+            order_columns = load_columns().get("orders", set())
+            dimension = "province" if "province" in order_columns else "region"
             return json.dumps(
                 {
                     "query_type": "aggregate",
                     "table_name": "订单主表",
-                    "group_by": ["province"],
+                    "group_by": [dimension],
                     "aggregates": [{"field": "total_amount", "func": "sum", "alias": "gmv"}],
                     "order_by": [{"field": "gmv", "direction": "desc"}],
                     "page_size": 100,
-                    "chart_config": {"chart_type": "bar", "x_field": "province", "y_field": "gmv"},
+                    "chart_config": {"chart_type": "bar", "x_field": dimension, "y_field": "gmv"},
                 },
                 ensure_ascii=False,
             )

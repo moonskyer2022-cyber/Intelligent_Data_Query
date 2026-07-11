@@ -74,6 +74,10 @@
           <form class="command-box" id="composer">
             <label class="sr-only" for="questionInput">输入业务问题</label>
             <textarea id="questionInput" rows="6" maxlength="2000" placeholder="例如：各省份订单金额排名，并生成图表"></textarea>
+            <label class="api-key-field" for="apiKeyInput">
+              <span>API Key（可选）</span>
+              <input id="apiKeyInput" type="password" autocomplete="off" placeholder="仅在后端启用 API_KEY 时填写" />
+            </label>
             <div class="command-footer">
               <div class="mode-tabs" aria-label="分析模式">
                 <button type="button" class="selected">自动分析</button>

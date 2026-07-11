@@ -9,6 +9,7 @@ class GlobalState(BaseModel):
     chat_history: list[dict[str, str]] = Field(default_factory=list)
     query_plan: Optional[dict[str, Any]] = None
     query_result: list[dict[str, Any]] = Field(default_factory=list)
+    rows: list[dict[str, Any]] = Field(default_factory=list)
     chart_config: Optional[dict[str, Any]] = None
     chart_url: Optional[str] = None
     error_message: Optional[str] = None

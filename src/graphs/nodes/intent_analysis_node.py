@@ -8,7 +8,7 @@ from storage.db_meta import schema_prompt
 from tools.chart_generator import should_generate_chart
 
 
-def intent_analysis_node(state: GlobalState, _config: RunnableConfig) -> dict:
+def intent_analysis_node(state: GlobalState, _config: RunnableConfig | None = None) -> dict:
     try:
         text = run_llm_cfg(
             "intent_analysis_llm_cfg",

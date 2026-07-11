@@ -95,7 +95,7 @@ async def run_query(req: GraphInput, request: Request):
             chart_url=result.get("chart_url"),
             session_id=req.session_id,
             query_plan=result.get("query_plan"),
-            rows=result.get("query_result", []),
+            rows=result.get("rows", result.get("query_result", [])),
             execution_ms=round((time.perf_counter() - started) * 1000),
             request_id=request_id,
         )

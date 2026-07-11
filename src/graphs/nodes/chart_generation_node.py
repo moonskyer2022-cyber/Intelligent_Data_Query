@@ -6,7 +6,7 @@ from graphs.state import GlobalState
 from tools.chart_generator import generate_chart, infer_chart_config
 
 
-def chart_generation_node(state: GlobalState, _config: RunnableConfig) -> dict:
+def chart_generation_node(state: GlobalState, _config: RunnableConfig | None = None) -> dict:
     chart_config = state.chart_config
     if not chart_config:
         return {"chart_url": None}

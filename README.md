@@ -119,10 +119,10 @@ python run.py --server
 也可以使用一键 Demo 脚本：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/demo.ps1 -Install
+powershell -ExecutionPolicy Bypass -File scripts/demo.ps1 -Install -DemoMode -OpenBrowser
 ```
 
-如果现场没有可用的 LLM API，可在 `.env` 中设置 `DEMO_MODE=true`，使用固定示例问题进行稳定演示；该模式仍需要可连接的 MySQL 和演示数据。
+脚本会创建缺失的 `.env`、检查 MySQL、启动服务并等待 `/health` 通过。`-DemoMode` 使用固定查询计划进行稳定演示；该模式仍需要可连接的 MySQL 和演示数据。
 
 访问地址：
 
@@ -175,6 +175,7 @@ python run.py -q "各省份订单金额排名，并生成图表"
 - SQL 由应用层根据结构化查询计划生成，不直接执行模型输出的 SQL 文本；
 - 数据库连接、LLM Key 和密码通过 `.env` 配置，不写入仓库；
 - 设置 `API_KEY` 后，`/run`、`/examples` 和 `/tables` 需要通过 `X-API-Key` 请求头访问；
+- 前端问题输入区提供可选 API Key，填写后会在当前浏览器会话中自动携带请求头；
 - SQL 执行层只接受应用生成的只读 `SELECT` 查询，并限制单次返回行数；
 - 服务健康检查会分别报告数据库与 LLM 配置状态；
 - 生成的图表和运行日志属于本地运行产物，默认不提交到 Git。

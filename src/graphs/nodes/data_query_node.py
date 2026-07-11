@@ -5,7 +5,7 @@ from query.schema import QueryPlan
 from storage.mysql_db import MySQLDataStore
 
 
-def data_query_node(state: GlobalState, _config: RunnableConfig) -> dict:
+def data_query_node(state: GlobalState, _config: RunnableConfig | None = None) -> dict:
     if state.error_message or not state.query_plan:
         return {}
 
@@ -19,4 +19,4 @@ def data_query_node(state: GlobalState, _config: RunnableConfig) -> dict:
             "query_result": [],
         }
 
-    return {"query_result": query_result, "error_message": None}
+    return {"query_result": query_result, "rows": query_result, "error_message": None}

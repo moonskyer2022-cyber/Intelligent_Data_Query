@@ -6,7 +6,7 @@ from query.summary import summarize_results
 from session import session_store
 
 
-def result_format_node(state: GlobalState, _config: RunnableConfig) -> dict:
+def result_format_node(state: GlobalState, _config: RunnableConfig | None = None) -> dict:
     if state.error_message:
         answer = state.error_message
     elif not state.query_result:

@@ -9,6 +9,7 @@ const chat = document.getElementById("chat");
 const welcome = document.getElementById("welcome");
 const composer = document.getElementById("composer");
 const questionInput = document.getElementById("questionInput");
+const apiKeyInput = document.getElementById("apiKeyInput");
 const sendBtn = document.getElementById("sendBtn");
 const clearChatBtn = document.getElementById("clearChatBtn");
 const examplesEl = document.getElementById("examples");
@@ -23,6 +24,17 @@ const databaseDetail = document.getElementById("databaseDetail");
 const llmDetail = document.getElementById("llmDetail");
 const viewButtons = document.querySelectorAll(".view-switch button");
 const visualPanels = document.querySelectorAll(".visual-panel");
+const API_KEY_STORAGE = "intelligent_data_query_api_key";
+
+if (apiKeyInput) {
+  apiKeyInput.value = sessionStorage.getItem(API_KEY_STORAGE) || "";
+  apiKeyInput.addEventListener("input", () => sessionStorage.setItem(API_KEY_STORAGE, apiKeyInput.value.trim()));
+}
+
+function authHeaders() {
+  const key = apiKeyInput?.value.trim();
+  return key ? { "X-API-Key": key } : {};
+}
 
 const businessNames = {
   product: "商品信息",
@@ -241,8 +253,8 @@ async function checkHealth() {
 async function loadMeta() {
   try {
     const [examplesResponse, tablesResponse] = await Promise.all([
-      fetch(`${API_BASE}/examples`),
-      fetch(`${API_BASE}/tables`),
+      fetch(`${API_BASE}/examples`, { headers: authHeaders() }),
+      fetch(`${API_BASE}/tables`, { headers: authHeaders() }),
     ]);
     const examples = examplesResponse.ok ? (await examplesResponse.json()).examples || [] : [];
     const tables = tablesResponse.ok ? (await tablesResponse.json()).tables || [] : [];
@@ -266,7 +278,7 @@ async function submitQuestion() {
   try {
     const response = await fetch(`${API_BASE}/run`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
         user_question: question,
         session_id: getSessionId(),
