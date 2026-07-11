@@ -1,4 +1,4 @@
-# AIQuery 本地智能问数平台
+# 智能问数（Intelligent Data Query）
 
 基于 **FastAPI + LangGraph + MySQL + OpenAI-compatible LLM** 的本地智能问数平台。项目将自然语言业务问题解析为结构化查询计划，结合数据库元数据生成安全 SQL，返回可读的业务结论，并在适合的场景下生成图表。
 
